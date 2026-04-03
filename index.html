@@ -8,6 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<!-- html2pdf for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -41,10 +43,39 @@ const db = firebase.firestore();
   --transition:0.22s cubic-bezier(0.4,0,0.2,1);
   --font-display:'DM Serif Display',Georgia,serif;
   --font-body:'DM Sans',system-ui,sans-serif;
+  /* NEW: card/bg for dark mode override */
+  --bg-page: var(--cream);
+  --bg-card: var(--white);
+  --bg-sand: var(--sand);
+  --border-col: var(--border);
+  --text-main: var(--text);
+  --text-dim: var(--text-muted);
 }
+
+/* ===================== DARK MODE ===================== */
+/* NEW FEATURE 4: Dark mode colour overrides */
+body.dark-mode {
+  --bg-page: #141d17;
+  --bg-card: #1e2d24;
+  --bg-sand: #1a2620;
+  --border-col: #2e4238;
+  --text-main: #dde8e2;
+  --text-dim: #7a9b88;
+  --white: #1e2d24;
+  --cream: #141d17;
+  --sand: #1a2620;
+  --border: #2e4238;
+  --text: #dde8e2;
+  --text-muted: #7a9b88;
+  --sage-light: #1f3329;
+  --slate-light: #1a2530;
+  --slate-dark: #9bbdd1;
+  --dark: #e8f2ec;
+}
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;font-size:16px;}
-body{font-family:var(--font-body);color:var(--text);background:var(--cream);line-height:1.7;overflow-x:hidden;}
+body{font-family:var(--font-body);color:var(--text);background:var(--cream);line-height:1.7;overflow-x:hidden;transition:background 0.3s,color 0.3s;}
 h1,h2,h3,h4{font-family:var(--font-display);line-height:1.25;color:var(--dark);}
 a{color:var(--sage);text-decoration:none;transition:color var(--transition);}
 a:hover{color:var(--sage-dark);}
@@ -60,7 +91,7 @@ input,textarea,select{font-family:var(--font-body);}
 .card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.75rem;box-shadow:var(--shadow-sm);transition:box-shadow var(--transition),transform var(--transition);}
 .card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
 .btn{display:inline-flex;align-items:center;gap:0.5rem;padding:0.75rem 1.75rem;border-radius:99px;font-size:0.95rem;font-weight:500;transition:all var(--transition);border:2px solid transparent;cursor:pointer;}
-.btn-primary{background:var(--sage);color:var(--white);border-color:var(--sage);}
+.btn-primary{background:var(--sage);color:#fff;border-color:var(--sage);}
 .btn-primary:hover{background:var(--sage-dark);border-color:var(--sage-dark);transform:translateY(-1px);box-shadow:var(--shadow-sm);}
 .btn-primary:disabled{opacity:0.65;cursor:not-allowed;transform:none;}
 .btn-secondary{background:transparent;color:var(--sage);border-color:var(--sage);}
@@ -95,7 +126,8 @@ input[type="range"]{width:100%;accent-color:var(--sage);cursor:pointer;}
 label{font-size:0.88rem;font-weight:500;color:var(--text-muted);display:block;margin-bottom:0.35rem;}
 
 /* =================== HEADER =================== */
-#site-header{position:sticky;top:0;z-index:200;background:rgba(250,248,244,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+#site-header{position:sticky;top:0;z-index:200;background:rgba(250,248,244,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);transition:background 0.3s;}
+body.dark-mode #site-header{background:rgba(20,29,23,0.92);}
 .nav-inner{display:flex;align-items:center;justify-content:space-between;height:64px;}
 .logo{font-family:var(--font-display);font-size:1.55rem;color:var(--dark);display:flex;align-items:center;gap:0.45rem;}
 .logo-dot{width:10px;height:10px;border-radius:50%;background:var(--sage);display:inline-block;}
@@ -113,16 +145,27 @@ label{font-size:0.88rem;font-weight:500;color:var(--text-muted);display:block;ma
 .mobile-nav a:hover{background:var(--sage-light);color:var(--sage-dark);}
 .mobile-nav.open{display:flex;}
 
+/* NEW: Dark mode toggle button */
+#dark-toggle{width:38px;height:38px;border-radius:50%;background:var(--sage-light);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sage-dark);font-size:1rem;transition:all var(--transition);flex-shrink:0;}
+#dark-toggle:hover{background:var(--sage);color:#fff;transform:rotate(15deg);}
+
 /* =================== HERO =================== */
+/* NEW FEATURE 1: Hero with slow pulse animation */
 #home{background:linear-gradient(160deg,var(--sage-light) 0%,var(--cream) 55%,var(--sand) 100%);padding:6rem 0 5rem;position:relative;overflow:hidden;}
-#home::before{content:'';position:absolute;top:-60px;right:-80px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(90,138,106,0.12) 0%,transparent 70%);pointer-events:none;}
-#home::after{content:'';position:absolute;bottom:-40px;left:-60px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(74,98,120,0.08) 0%,transparent 70%);pointer-events:none;}
+#home::before{content:'';position:absolute;top:-60px;right:-80px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(90,138,106,0.12) 0%,transparent 70%);pointer-events:none;animation:hero-pulse 8s ease-in-out infinite;}
+#home::after{content:'';position:absolute;bottom:-40px;left:-60px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(74,98,120,0.08) 0%,transparent 70%);pointer-events:none;animation:hero-pulse 10s 2s ease-in-out infinite;}
+@keyframes hero-pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.12);opacity:0.7;}}
 .hero-content{max-width:660px;position:relative;z-index:1;}
 .hero-content .tag{margin-bottom:1.25rem;}
 .hero-content h1{font-size:clamp(2.2rem,5vw,3.4rem);margin-bottom:1.1rem;}
 .hero-content h1 em{font-style:italic;color:var(--sage);}
-.hero-content p{font-size:1.08rem;color:var(--text-muted);margin-bottom:2rem;max-width:520px;}
+.hero-content p{font-size:1.08rem;color:var(--text-muted);margin-bottom:1rem;max-width:520px;}
+/* NEW FEATURE 1: Sub-heading below paragraph */
+.hero-subline{font-size:0.95rem;font-weight:600;color:var(--sage-dark);margin-bottom:1.75rem;display:flex;align-items:center;gap:0.5rem;}
+.hero-trust{font-size:0.82rem;color:var(--text-muted);margin-top:0.85rem;display:flex;align-items:center;gap:0.4rem;}
+.hero-trust i{color:var(--sage);}
 .hero-actions{display:flex;gap:1rem;flex-wrap:wrap;}
+/* NEW FEATURE 1: Two simplified stats */
 .hero-stats{display:flex;gap:2.5rem;margin-top:3.5rem;flex-wrap:wrap;}
 .hero-stat strong{display:block;font-family:var(--font-display);font-size:2rem;color:var(--dark);}
 .hero-stat span{font-size:0.82rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;}
@@ -139,6 +182,12 @@ label{font-size:0.88rem;font-weight:500;color:var(--text-muted);display:block;ma
 .phobia-card .phobia-scientific{font-size:0.82rem;color:var(--text-muted);font-style:italic;margin-bottom:0.65rem;}
 .phobia-card p{font-size:0.88rem;color:var(--text-muted);line-height:1.55;}
 .phobia-card .card-action{display:inline-flex;align-items:center;gap:0.3rem;margin-top:1rem;font-size:0.82rem;font-weight:600;color:var(--sage);}
+
+/* =================== AUDIO ON CARD =================== */
+.audio-on-card{margin-top:0.75rem;border-top:1px solid var(--border);padding-top:0.65rem;}
+.audio-on-card-label{display:flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:600;color:var(--sage-dark);margin-bottom:0.4rem;}
+.audio-on-card audio{width:100%;height:32px;border-radius:99px;display:block;accent-color:var(--sage);}
+.audio-on-card{position:relative;z-index:2;}
 
 /* =================== SECTION HEADERS =================== */
 .section-header{max-width:600px;margin-bottom:3rem;}
@@ -161,24 +210,17 @@ label{font-size:0.88rem;font-weight:500;color:var(--text-muted);display:block;ma
 .ladder-spine{position:relative;}
 .ladder-spine::before{content:'';position:absolute;left:28px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--sage-light),var(--border));border-radius:1px;z-index:0;}
 
-.ladder-rung{
-  display:flex;align-items:flex-start;gap:0.7rem;
-  background:var(--white);border:1.5px solid var(--border);
-  border-radius:var(--radius-md);padding:0.9rem 1rem 0.9rem 0.75rem;
-  margin-bottom:0.7rem;position:relative;z-index:1;
-  transition:border-color var(--transition),box-shadow var(--transition),opacity var(--transition),background var(--transition);
-  cursor:default;
-}
+.ladder-rung{display:flex;align-items:flex-start;gap:0.7rem;background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:0.9rem 1rem 0.9rem 0.75rem;margin-bottom:0.7rem;position:relative;z-index:1;transition:border-color var(--transition),box-shadow var(--transition),opacity var(--transition),background var(--transition);cursor:default;}
 .ladder-rung:hover{border-color:var(--sage);box-shadow:var(--shadow-sm);}
 .ladder-rung.is-dragging{opacity:0.55;box-shadow:var(--shadow-md);}
 .ladder-rung.completed{background:#f6faf7;border-color:var(--sage);opacity:0.82;}
+body.dark-mode .ladder-rung.completed{background:#1f3329;}
 .ladder-rung.completed .rung-desc{text-decoration:line-through;color:var(--text-muted);}
 
-/* Media badge on rung */
 .rung-media-badge{display:inline-flex;align-items:center;gap:0.25rem;font-size:0.75rem;font-weight:600;color:var(--slate-dark);background:var(--slate-light);border-radius:99px;padding:0.18rem 0.55rem;margin-top:0.3rem;cursor:pointer;transition:all var(--transition);border:none;}
-.rung-media-badge:hover{background:var(--slate);color:var(--white);}
+.rung-media-badge:hover{background:var(--slate);color:#fff;}
 .rung-media-badge.video-badge{color:#8B4513;background:#fff3e0;}
-.rung-media-badge.video-badge:hover{background:#e67e22;color:var(--white);}
+.rung-media-badge.video-badge:hover{background:#e67e22;color:#fff;}
 
 .rung-grip{flex-shrink:0;cursor:grab;color:#c5d8cc;font-size:1.05rem;padding:2px 4px;margin-top:2px;transition:color var(--transition);user-select:none;touch-action:none;}
 .rung-grip:hover{color:var(--sage);}
@@ -186,7 +228,7 @@ label{font-size:0.88rem;font-weight:500;color:var(--text-muted);display:block;ma
 
 .rung-check-wrap{flex-shrink:0;margin-top:2px;}
 .rung-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition);}
-.rung-check.done{background:var(--sage);border-color:var(--sage);color:var(--white);}
+.rung-check.done{background:var(--sage);border-color:var(--sage);color:#fff;}
 .rung-check i{font-size:0.62rem;}
 
 .rung-body{flex:1;min-width:0;}
@@ -194,7 +236,7 @@ label{font-size:0.88rem;font-weight:500;color:var(--text-muted);display:block;ma
 .rung-desc-edit{display:none;width:100%;margin-top:0.3rem;}
 .rung-sub{display:flex;align-items:center;gap:0.5rem;margin-top:0.35rem;flex-wrap:wrap;}
 
-.rung-rating{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:99px;font-size:0.78rem;font-weight:700;color:var(--white);padding:0 0.5rem;flex-shrink:0;}
+.rung-rating{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:99px;font-size:0.78rem;font-weight:700;color:#fff;padding:0 0.5rem;flex-shrink:0;}
 .rating-easy{background:#27ae60;}
 .rating-medium{background:#e67e22;}
 .rating-hard{background:#c0392b;}
@@ -233,6 +275,67 @@ label{font-size:0.88rem;font-weight:500;color:var(--text-muted);display:block;ma
 .journal-entry .date{font-size:0.8rem;color:var(--text-muted);margin-bottom:0.35rem;}
 .journal-entry .content{font-size:0.92rem;}
 
+/* =================== NEW FEATURE 2: STREAK & ACHIEVEMENTS =================== */
+.streak-row{display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:linear-gradient(135deg,#fff8e1,#fff3cd);border-radius:var(--radius-md);border:1px solid #f9c74f;margin-bottom:0.75rem;}
+body.dark-mode .streak-row{background:linear-gradient(135deg,#2a2310,#1e1a0c);border-color:#5a4a10;}
+.streak-flame{font-size:1.6rem;line-height:1;}
+.streak-info strong{font-size:1.2rem;font-family:var(--font-display);color:#d97706;}
+.streak-info span{font-size:0.78rem;color:var(--text-muted);display:block;}
+.achievements-area{margin-top:0.5rem;}
+.achievements-title{font-size:0.82rem;font-weight:600;color:var(--text-muted);margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.06em;}
+.badge-pills{display:flex;flex-wrap:wrap;gap:0.4rem;}
+.badge-pill{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.75rem;font-weight:600;padding:0.25rem 0.65rem;border-radius:99px;background:linear-gradient(135deg,var(--sage-light),var(--slate-light));color:var(--dark);border:1px solid var(--border);}
+.badge-pill.earned{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f9c74f;color:#92400e;}
+body.dark-mode .badge-pill.earned{background:linear-gradient(135deg,#3d2e08,#2a2010);border-color:#7a5e1a;color:#fcd34d;}
+
+/* =================== NEW FEATURE 3: EXPORT MODAL =================== */
+.export-dropdown{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:0.5rem;min-width:240px;}
+.export-option{display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;border-radius:var(--radius-sm);cursor:pointer;transition:background var(--transition);border:none;background:none;width:100%;color:var(--text);font-size:0.9rem;font-weight:500;text-align:left;}
+.export-option:hover{background:var(--sage-light);color:var(--sage-dark);}
+.export-option i{width:20px;text-align:center;color:var(--sage);}
+.export-modal-overlay{position:fixed;inset:0;z-index:1100;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+.export-modal-overlay.open{display:flex;}
+
+/* =================== NEW FEATURE 5: SELF-HELP TOOLS / BREATHING TIMER =================== */
+/* The tools section appended to the page */
+#tools-section{background:var(--sand);padding:5rem 0;}
+.tools-tab-strip{display:flex;gap:0;border-radius:var(--radius-md);background:var(--white);border:1.5px solid var(--border);overflow:hidden;margin-bottom:2rem;width:fit-content;}
+.tools-tab-btn{padding:0.7rem 1.5rem;font-size:0.9rem;font-weight:500;background:none;border:none;cursor:pointer;color:var(--text-muted);border-right:1px solid var(--border);transition:all var(--transition);}
+.tools-tab-btn:last-child{border-right:none;}
+.tools-tab-btn.active{background:var(--sage);color:#fff;}
+.tools-tab-btn:hover:not(.active){background:var(--sage-light);color:var(--sage-dark);}
+.tools-panel{display:none;}
+.tools-panel.active{display:block;}
+
+/* Breathing timer specific styles */
+.breathing-layout{display:grid;grid-template-columns:1fr 320px;gap:2.5rem;align-items:center;}
+@media(max-width:800px){.breathing-layout{grid-template-columns:1fr;}}
+.breathing-circle-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 0;}
+.breathing-circle-outer{position:relative;width:260px;height:260px;}
+.breathing-track{fill:none;stroke:var(--border);stroke-width:8;}
+.breathing-progress{fill:none;stroke:var(--sage);stroke-width:8;stroke-linecap:round;transform-origin:center;transform:rotate(-90deg);transition:stroke-dashoffset 0.1s linear, stroke 0.5s;}
+.breathing-inner-circle{position:absolute;inset:24px;border-radius:50%;background:linear-gradient(135deg,var(--sage-light),var(--slate-light));display:flex;flex-direction:column;align-items:center;justify-content:center;animation-timing-function:ease-in-out;transition:transform 0.4s ease;}
+.breathing-phase-label{font-family:var(--font-display);font-size:1.5rem;color:var(--sage-dark);margin-bottom:0.2rem;}
+.breathing-timer-num{font-size:2.5rem;font-weight:700;color:var(--dark);font-family:var(--font-display);}
+.breathing-desc{font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;}
+.breathing-controls{display:flex;gap:0.75rem;margin-top:2rem;flex-wrap:wrap;justify-content:center;}
+
+.breathing-settings{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem;box-shadow:var(--shadow-sm);}
+.breathing-settings h4{font-family:var(--font-body);font-weight:600;font-size:0.95rem;margin-bottom:1rem;color:var(--dark);}
+.preset-btns{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem;}
+.preset-btn{padding:0.6rem 1rem;border-radius:var(--radius-sm);border:1.5px solid var(--border);background:none;cursor:pointer;font-size:0.85rem;font-weight:500;color:var(--text);transition:all var(--transition);text-align:left;}
+.preset-btn:hover{border-color:var(--sage);background:var(--sage-light);color:var(--sage-dark);}
+.preset-btn.active{border-color:var(--sage);background:var(--sage-light);color:var(--sage-dark);font-weight:600;}
+.phase-slider-group{margin-bottom:1rem;}
+.phase-slider-group label{font-size:0.82rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:flex;justify-content:space-between;}
+.phase-slider-group label span{color:var(--sage-dark);font-weight:700;}
+
+/* Relaxation tab content (panic techniques reused) */
+.relaxation-techniques{display:flex;flex-direction:column;gap:1rem;}
+.relaxation-technique{background:var(--white);border-radius:var(--radius-md);padding:1.25rem;border-left:3px solid var(--sage);}
+.relaxation-technique h4{font-family:var(--font-body);font-size:0.95rem;font-weight:600;margin-bottom:0.35rem;}
+.relaxation-technique p{font-size:0.88rem;color:var(--text-muted);}
+
 /* =================== PROGRAMS =================== */
 .progress-bar-outer{background:var(--sand);border-radius:99px;height:12px;overflow:hidden;}
 .progress-bar-inner{background:linear-gradient(90deg,var(--sage),var(--sage-dark));height:100%;border-radius:99px;transition:width 0.5s ease;}
@@ -249,7 +352,7 @@ label{font-size:0.88rem;font-weight:500;color:var(--text-muted);display:block;ma
 .week-accordion[open] summary::after{content:'−';}
 .week-accordion .day-list{padding:0.75rem 0 0.75rem 0.5rem;}
 .day-item{display:flex;align-items:center;gap:0.75rem;padding:0.55rem 0;border-bottom:1px solid rgba(0,0,0,0.04);font-size:0.9rem;}
-.day-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:var(--white);transition:all var(--transition);}
+.day-check{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border);background:var(--white);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:#fff;transition:all var(--transition);}
 .day-check.done{background:var(--sage);border-color:var(--sage);}
 
 /* =================== VIDEOS =================== */
@@ -263,7 +366,7 @@ label{font-size:0.88rem;font-weight:500;color:var(--text-muted);display:block;ma
 
 /* =================== PROFESSIONAL =================== */
 #professional{background:var(--dark);color:rgba(255,255,255,0.85);padding:4rem 0;}
-#professional h2{color:var(--white);font-size:clamp(1.6rem,3vw,2.2rem);margin-bottom:0.85rem;}
+#professional h2{color:#fff;font-size:clamp(1.6rem,3vw,2.2rem);margin-bottom:0.85rem;}
 #professional p{color:rgba(255,255,255,0.65);}
 #professional a{color:#9fd3b2;}
 #professional a:hover{color:#c9e9d8;}
@@ -276,7 +379,7 @@ label{font-size:0.88rem;font-weight:500;color:var(--text-muted);display:block;ma
 .help-link{display:flex;align-items:center;gap:0.75rem;padding:1rem 1.25rem;background:rgba(255,255,255,0.06);border-radius:var(--radius-md);border:1px solid rgba(255,255,255,0.1);transition:background var(--transition);}
 .help-link:hover{background:rgba(255,255,255,0.12);}
 .help-link i{color:#9fd3b2;font-size:1.1rem;}
-.help-link div .title{font-weight:500;font-size:0.95rem;color:var(--white);display:block;}
+.help-link div .title{font-weight:500;font-size:0.95rem;color:#fff;display:block;}
 .help-link div .sub{font-size:0.82rem;color:rgba(255,255,255,0.55);}
 footer{background:var(--dark);border-top:1px solid rgba(255,255,255,0.08);padding:2rem 0;text-align:center;}
 footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
@@ -291,63 +394,26 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
 .modal-symptom-list li{display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0;border-bottom:1px solid var(--border);font-size:0.9rem;}
 .modal-symptom-list li i{color:var(--sage);font-size:0.75rem;}
 
-/* =================== MEDIA LIGHTBOX =================== */
-.media-modal-box{
-  background:var(--white);border-radius:var(--radius-xl);
-  max-width:780px;width:100%;position:relative;
-  box-shadow:var(--shadow-lg);overflow:hidden;
-}
-.media-modal-header{
-  padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;gap:1rem;
-}
+/* Media lightbox */
+.media-modal-box{background:var(--white);border-radius:var(--radius-xl);max-width:780px;width:100%;position:relative;box-shadow:var(--shadow-lg);overflow:hidden;}
+.media-modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;}
 .media-modal-title{font-family:var(--font-body);font-weight:600;font-size:0.95rem;color:var(--dark);flex:1;}
 .media-modal-body{padding:0;}
-.media-modal-image-wrap{
-  width:100%;background:#000;display:flex;align-items:center;justify-content:center;
-  min-height:260px;max-height:60vh;overflow:hidden;
-}
-.media-modal-image-wrap img{
-  width:100%;max-height:60vh;object-fit:contain;display:block;
-}
-.media-modal-video-wrap{
-  position:relative;padding-bottom:56.25%;height:0;background:#000;
-}
-.media-modal-video-wrap iframe{
-  position:absolute;top:0;left:0;width:100%;height:100%;border:none;
-}
-.media-modal-caption{
-  padding:1.25rem 1.5rem;background:var(--sand);
-  font-size:0.88rem;color:var(--text-muted);border-top:1px solid var(--border);
-}
+.media-modal-image-wrap{width:100%;background:#000;display:flex;align-items:center;justify-content:center;min-height:260px;max-height:60vh;overflow:hidden;}
+.media-modal-image-wrap img{width:100%;max-height:60vh;object-fit:contain;display:block;}
+.media-modal-video-wrap{position:relative;padding-bottom:56.25%;height:0;background:#000;}
+.media-modal-video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;}
+.media-modal-caption{padding:1.25rem 1.5rem;background:var(--sand);font-size:0.88rem;color:var(--text-muted);border-top:1px solid var(--border);}
 .media-modal-caption strong{color:var(--dark);}
 .media-modal-footer{padding:1rem 1.5rem;display:flex;gap:0.75rem;justify-content:flex-end;border-top:1px solid var(--border);}
 
-/* Media counter pill for phobia modal */
-.media-count-pill{
-  display:inline-flex;align-items:center;gap:0.3rem;
-  background:var(--slate-light);color:var(--slate-dark);
-  border-radius:99px;padding:0.2rem 0.65rem;font-size:0.78rem;font-weight:600;
-}
-
-/* Suggested steps preview in phobia modal */
+.media-count-pill{display:inline-flex;align-items:center;gap:0.3rem;background:var(--slate-light);color:var(--slate-dark);border-radius:99px;padding:0.2rem 0.65rem;font-size:0.78rem;font-weight:600;}
 .suggested-steps-list{list-style:none;padding:0;margin:0.75rem 0;}
-.suggested-step-item{
-  display:flex;align-items:center;gap:0.75rem;
-  padding:0.6rem 0.75rem;border-radius:var(--radius-sm);
-  background:var(--sand);margin-bottom:0.4rem;font-size:0.88rem;
-}
-.suggested-step-item .step-rating{
-  flex-shrink:0;min-width:24px;height:24px;border-radius:99px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:0.72rem;font-weight:700;color:var(--white);padding:0 0.4rem;
-}
-.suggested-step-item .step-has-media{
-  margin-left:auto;flex-shrink:0;font-size:0.75rem;color:var(--slate);
-  display:flex;align-items:center;gap:0.2rem;
-}
+.suggested-step-item{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius-sm);background:var(--sand);margin-bottom:0.4rem;font-size:0.88rem;}
+.suggested-step-item .step-rating{flex-shrink:0;min-width:24px;height:24px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;color:#fff;padding:0 0.4rem;}
+.suggested-step-item .step-has-media{margin-left:auto;flex-shrink:0;font-size:0.75rem;color:var(--slate);display:flex;align-items:center;gap:0.2rem;}
 
-/* =================== AUTH MODAL =================== */
+/* Auth modal */
 .auth-modal-box{background:var(--white);border-radius:var(--radius-xl);max-width:460px;width:100%;position:relative;box-shadow:var(--shadow-lg);overflow:hidden;}
 .auth-header{padding:2rem 2rem 1.5rem;background:linear-gradient(135deg,var(--sage-light) 0%,var(--slate-light) 100%);text-align:center;}
 .auth-header-icon{font-size:2.8rem;margin-bottom:0.5rem;}
@@ -377,13 +443,13 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
 .pw-strength-fill{height:100%;border-radius:99px;transition:width 0.3s,background 0.3s;width:0%;}
 .pw-strength-lbl{font-size:0.75rem;}
 .auth-note{text-align:center;font-size:0.8rem;color:var(--text-muted);margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);}
-.spin{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.35);border-top-color:var(--white);animation:spin360 0.7s linear infinite;vertical-align:middle;}
+.spin{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;animation:spin360 0.7s linear infinite;vertical-align:middle;}
 @keyframes spin360{to{transform:rotate(360deg);}}
 
-/* =================== PANIC =================== */
-#panic-btn{position:fixed;bottom:1.75rem;right:1.75rem;z-index:500;width:56px;height:56px;border-radius:50%;background:var(--sage);color:var(--white);border:none;box-shadow:0 4px 20px rgba(90,138,106,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:all var(--transition);animation:pulse-ring 2.5s ease infinite;}
+/* Panic */
+#panic-btn{position:fixed;bottom:1.75rem;right:1.75rem;z-index:500;width:56px;height:56px;border-radius:50%;background:var(--sage);color:#fff;border:none;box-shadow:0 4px 20px rgba(90,138,106,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:all var(--transition);animation:pulse-ring 2.5s ease infinite;}
 #panic-btn:hover{background:var(--sage-dark);transform:scale(1.08);}
-.panic-tooltip{position:absolute;right:calc(100% + 0.75rem);top:50%;transform:translateY(-50%);background:var(--dark);color:var(--white);font-size:0.78rem;font-weight:500;padding:0.35rem 0.75rem;border-radius:99px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity var(--transition);}
+.panic-tooltip{position:absolute;right:calc(100% + 0.75rem);top:50%;transform:translateY(-50%);background:var(--dark);color:#fff;font-size:0.78rem;font-weight:500;padding:0.35rem 0.75rem;border-radius:99px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity var(--transition);}
 #panic-btn:hover .panic-tooltip{opacity:1;}
 @keyframes pulse-ring{0%{box-shadow:0 4px 20px rgba(90,138,106,0.4),0 0 0 0 rgba(90,138,106,0.35);}70%{box-shadow:0 4px 20px rgba(90,138,106,0.4),0 0 0 10px rgba(90,138,106,0);}100%{box-shadow:0 4px 20px rgba(90,138,106,0.4),0 0 0 0 rgba(90,138,106,0);}}
 .panic-modal-box{background:var(--white);border-radius:var(--radius-xl);max-width:560px;width:100%;padding:2.5rem;position:relative;box-shadow:var(--shadow-lg);text-align:center;max-height:85vh;overflow-y:auto;}
@@ -394,7 +460,7 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
 .panic-technique h4{font-family:var(--font-body);font-size:0.95rem;font-weight:600;margin-bottom:0.35rem;}
 .panic-technique p{font-size:0.88rem;color:var(--text-muted);}
 
-#toast{position:fixed;bottom:5.5rem;right:1.75rem;z-index:600;background:var(--dark);color:var(--white);padding:0.75rem 1.25rem;border-radius:var(--radius-md);font-size:0.88rem;box-shadow:var(--shadow-md);transform:translateY(10px);opacity:0;transition:all 0.3s ease;pointer-events:none;}
+#toast{position:fixed;bottom:5.5rem;right:1.75rem;z-index:600;background:var(--dark);color:#fff;padding:0.75rem 1.25rem;border-radius:var(--radius-md);font-size:0.88rem;box-shadow:var(--shadow-md);transform:translateY(10px);opacity:0;transition:all 0.3s ease;pointer-events:none;}
 #toast.show{transform:translateY(0);opacity:1;}
 
 @keyframes fadeInUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
@@ -413,6 +479,7 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
   .ladder-spine::before{left:24px;}
   .media-modal-box{max-width:100%;border-radius:var(--radius-lg);}
   .media-modal-image-wrap{max-height:45vw;}
+  .breathing-layout{grid-template-columns:1fr;}
 }
 </style>
 </head>
@@ -427,10 +494,15 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
       <li><a href="#library" onclick="setActive(this)">Phobia Library</a></li>
       <li><a href="#selfhelp" onclick="setActive(this)">Fear Ladder</a></li>
       <li><a href="#programs" onclick="setActive(this)">Guided Programs</a></li>
+      <li><a href="#tools-section" onclick="setActive(this)">Self-Help Tools</a></li>
       <li><a href="#videos" onclick="setActive(this)">Videos</a></li>
       <li><a href="#professional" onclick="setActive(this)">Professional Help</a></li>
     </ul>
     <div class="user-area">
+      <!-- NEW FEATURE 4: Dark mode toggle -->
+      <button id="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">
+        <i class="fas fa-moon" id="dark-toggle-icon"></i>
+      </button>
       <button id="login-btn" class="btn btn-secondary btn-sm" onclick="openAuthModal('signin')">
         <i class="fas fa-user"></i> Sign in
       </button>
@@ -451,26 +523,36 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
     <a href="#library" onclick="closeMobileNav()">Phobia Library</a>
     <a href="#selfhelp" onclick="closeMobileNav()">Fear Ladder</a>
     <a href="#programs" onclick="closeMobileNav()">Guided Programs</a>
+    <a href="#tools-section" onclick="closeMobileNav()">Self-Help Tools</a>
     <a href="#videos" onclick="closeMobileNav()">Videos</a>
     <a href="#professional" onclick="closeMobileNav()">Professional Help</a>
   </div>
 </header>
 
 <!-- =================== HERO =================== -->
+<!-- CHANGE 1: Removed "Explore Phobias" button; added sub-heading, trust line, simplified stats -->
 <section id="home">
   <div class="container">
     <div class="hero-content">
       <span class="tag fade-in"><i class="fas fa-leaf"></i> CBT-Based Self-Help</span>
       <h1 class="fade-in-2">Face your fears, <em>one small step</em> at a time.</h1>
-      <p class="fade-in-3">FearFade helps you understand your phobias and gradually overcome them using evidence-based Cognitive Behavioural Therapy techniques — no virtual reality needed, just compassionate guidance at your own pace.</p>
-      <div class="hero-actions fade-in-3">
-        <a href="#selfhelp" class="btn btn-primary"><i class="fas fa-arrow-right"></i> Get Started</a>
-        <a href="#library" class="btn btn-secondary"><i class="fas fa-book-open"></i> Explore Phobias</a>
+      <p class="fade-in-3">FearFade helps you understand your phobias and gradually overcome them using evidence-based Cognitive Behavioural Therapy techniques — compassionate guidance at your own pace.</p>
+      <!-- NEW: Sub-heading below paragraph -->
+      <div class="hero-subline fade-in-3">
+        <span>⚡</span> No VR. No equipment. Just you and science-backed tools.
       </div>
+      <div class="hero-actions fade-in-3">
+        <!-- Kept only the "Get Started" button -->
+        <a href="#library" class="btn btn-primary"><i class="fas fa-arrow-right"></i> Get Started</a>
+      </div>
+      <!-- NEW: Trust line below button -->
+      <div class="hero-trust fade-in-3">
+        <i class="fas fa-lock"></i> Your progress is stored locally or in your private cloud account
+      </div>
+      <!-- Simplified to two stats -->
       <div class="hero-stats">
-        <div class="hero-stat"><strong>100+</strong><span>CBT techniques</span></div>
-        <div class="hero-stat"><strong>8</strong><span>Phobias covered</span></div>
-        <div class="hero-stat"><strong>Free</strong><span>Always &amp; forever</span></div>
+        <div class="hero-stat"><strong>8+</strong><span>Phobias supported</span></div>
+        <div class="hero-stat"><strong>100%</strong><span>Free Always</span></div>
       </div>
     </div>
   </div>
@@ -546,6 +628,22 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
       </div>
 
       <div class="ladder-sidebar">
+        <!-- NEW FEATURE 2: Streak counter -->
+        <div class="sidebar-card" id="streak-card">
+          <h4><i class="fas fa-fire" style="color:#f59e0b;margin-right:0.4rem;"></i>Streak & Achievements</h4>
+          <div class="streak-row" id="streak-row">
+            <div class="streak-flame">🔥</div>
+            <div class="streak-info">
+              <strong id="streak-count">0</strong>
+              <span id="streak-label">day streak</span>
+            </div>
+          </div>
+          <div class="achievements-area">
+            <div class="achievements-title">🏆 Achievements</div>
+            <div class="badge-pills" id="badge-pills"></div>
+          </div>
+        </div>
+
         <div class="instruction-box">
           <strong>💡 How to use your Fear Ladder</strong>
           Drag the <i class="fas fa-grip-vertical" style="color:var(--sage);"></i> handle to reorder rungs. Tap <i class="fas fa-film" style="color:var(--slate);"></i> <strong>View Media</strong> on any rung to open the exposure image or video. Check off each rung after completing an exposure session.
@@ -571,8 +669,24 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
           </ul>
         </div>
 
+        <!-- NEW FEATURE 3: Journal with Export Data button -->
         <div class="sidebar-card">
-          <h4><i class="fas fa-book-open" style="color:var(--sage);margin-right:0.4rem;"></i>Daily Journal</h4>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;flex-wrap:wrap;gap:0.5rem;">
+            <h4 style="margin-bottom:0;"><i class="fas fa-book-open" style="color:var(--sage);margin-right:0.4rem;"></i>Daily Journal</h4>
+            <div style="position:relative;">
+              <button class="btn btn-secondary btn-sm" onclick="toggleExportMenu()" id="export-btn" title="Export all data">
+                <i class="fas fa-download"></i> Export Data
+              </button>
+              <!-- Export dropdown -->
+              <div id="export-menu" style="display:none;position:absolute;right:0;top:calc(100% + 0.4rem);z-index:300;">
+                <div class="export-dropdown">
+                  <button class="export-option" onclick="exportJSON()"><i class="fas fa-code"></i> Export as JSON</button>
+                  <button class="export-option" onclick="exportCSV()"><i class="fas fa-table"></i> Export as CSV</button>
+                  <button class="export-option" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> Export as PDF</button>
+                </div>
+              </div>
+            </div>
+          </div>
           <p class="text-sm text-muted mb-2">Reflect on today's practice — what did you notice?</p>
           <textarea id="journal-input" rows="4" placeholder="Write today's reflection here..." style="resize:vertical;"></textarea>
           <button class="btn btn-primary btn-sm mt-2" onclick="saveJournalEntry()"><i class="fas fa-save"></i> Save Entry</button>
@@ -600,6 +714,118 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
       <p>Follow a daily checklist to build exposure and confidence over one month. Progress saves automatically.</p>
     </div>
     <div class="grid-2" id="programs-grid"></div>
+  </div>
+</section>
+
+<!-- =================== NEW FEATURE 5: SELF-HELP TOOLS SECTION =================== -->
+<!-- Contains Relaxation tab (existing techniques) + new Breathing Timer tab -->
+<section id="tools-section">
+  <div class="container">
+    <div class="section-header">
+      <span class="tag"><i class="fas fa-wind"></i> Self-Help Tools</span>
+      <h2>Practice calm, anytime</h2>
+      <p>Dedicated tools to help you regulate your nervous system before, during, or after exposure practice.</p>
+    </div>
+
+    <!-- Tab strip -->
+    <div class="tools-tab-strip">
+      <button class="tools-tab-btn active" id="ttab-relaxation" onclick="switchToolsTab('relaxation')">
+        <i class="fas fa-spa"></i> Relaxation
+      </button>
+      <button class="tools-tab-btn" id="ttab-breathing" onclick="switchToolsTab('breathing')">
+        <i class="fas fa-lungs"></i> Breathing Timer
+      </button>
+    </div>
+
+    <!-- RELAXATION TAB -->
+    <div class="tools-panel active" id="tpanel-relaxation">
+      <div class="grid-2">
+        <div class="relaxation-technique">
+          <h4>🌬️ Box Breathing (4-4-4-4)</h4>
+          <p>Breathe IN for 4 counts… HOLD for 4… OUT for 4… HOLD for 4. Repeat 4 times. Ideal for calming before an exposure session.</p>
+        </div>
+        <div class="relaxation-technique">
+          <h4>🌿 5-4-3-2-1 Grounding</h4>
+          <p>Name 5 things you see → 4 you touch → 3 you hear → 2 you smell → 1 you taste. Brings you back to the present moment instantly.</p>
+        </div>
+        <div class="relaxation-technique">
+          <h4>💪 TIPP Skill</h4>
+          <p><strong>T</strong>emperature — cold water on face. <strong>I</strong>ntense exercise 60 sec. <strong>P</strong>aced breathing. <strong>P</strong>rogressive relaxation.</p>
+        </div>
+        <div class="relaxation-technique">
+          <h4>🧘 Progressive Muscle Relaxation</h4>
+          <p>Starting at your feet, tense each muscle group for 5 seconds, then release. Work up to your face. Full body relaxation in ~10 minutes.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW FEATURE 5: BREATHING TIMER TAB -->
+    <div class="tools-panel" id="tpanel-breathing">
+      <div class="breathing-layout">
+        <!-- Circle animation -->
+        <div class="breathing-circle-wrap">
+          <div class="breathing-circle-outer">
+            <svg viewBox="0 0 260 260" width="260" height="260" style="position:absolute;top:0;left:0;">
+              <circle class="breathing-track" cx="130" cy="130" r="118"/>
+              <circle class="breathing-progress" id="breath-progress" cx="130" cy="130" r="118"
+                stroke-dasharray="741.42" stroke-dashoffset="741.42"/>
+            </svg>
+            <div class="breathing-inner-circle" id="breath-inner">
+              <div class="breathing-phase-label" id="breath-phase">Ready</div>
+              <div class="breathing-timer-num" id="breath-num">–</div>
+              <div class="breathing-desc" id="breath-desc">Press Start</div>
+            </div>
+          </div>
+          <div class="breathing-controls">
+            <button class="btn btn-primary" id="breath-start-btn" onclick="breathingStartStop()">
+              <i class="fas fa-play" id="breath-start-icon"></i> Start
+            </button>
+            <button class="btn btn-secondary" onclick="breathingReset()">
+              <i class="fas fa-redo"></i> Reset
+            </button>
+          </div>
+          <p class="text-sm text-muted mt-2" id="breath-session-label" style="text-align:center;">Session: 0 cycles</p>
+        </div>
+
+        <!-- Settings panel -->
+        <div class="breathing-settings">
+          <h4><i class="fas fa-sliders" style="color:var(--sage);margin-right:0.4rem;"></i>Settings</h4>
+
+          <!-- Presets -->
+          <p class="text-sm text-muted mb-2" style="font-weight:600;text-transform:uppercase;font-size:0.75rem;letter-spacing:0.06em;">Quick Presets</p>
+          <div class="preset-btns">
+            <button class="preset-btn active" id="preset-box" onclick="applyPreset('box')">
+              📦 Box Breathing — 4-4-4-4<br><small style="color:var(--text-muted);">Inhale · Hold · Exhale · Hold</small>
+            </button>
+            <button class="preset-btn" id="preset-478" onclick="applyPreset('478')">
+              🌙 4-7-8 Relaxing<br><small style="color:var(--text-muted);">Inhale · Hold · Exhale</small>
+            </button>
+            <button class="preset-btn" id="preset-555" onclick="applyPreset('555')">
+              ⚖️ 5-5-5 Balanced<br><small style="color:var(--text-muted);">Inhale · Hold · Exhale</small>
+            </button>
+          </div>
+
+          <!-- Custom sliders -->
+          <p class="text-sm text-muted mb-2" style="font-weight:600;text-transform:uppercase;font-size:0.75rem;letter-spacing:0.06em;margin-top:1rem;">Custom Durations</p>
+          <div class="phase-slider-group">
+            <label>Inhale <span id="sl-inhale-val">4</span>s</label>
+            <input type="range" min="2" max="12" value="4" id="sl-inhale" oninput="updateSlider('inhale',this.value)">
+          </div>
+          <div class="phase-slider-group">
+            <label>Hold after inhale <span id="sl-hold1-val">4</span>s</label>
+            <input type="range" min="0" max="12" value="4" id="sl-hold1" oninput="updateSlider('hold1',this.value)">
+          </div>
+          <div class="phase-slider-group">
+            <label>Exhale <span id="sl-exhale-val">4</span>s</label>
+            <input type="range" min="2" max="12" value="4" id="sl-exhale" oninput="updateSlider('exhale',this.value)">
+          </div>
+          <div class="phase-slider-group">
+            <label>Hold after exhale <span id="sl-hold2-val">4</span>s</label>
+            <input type="range" min="0" max="12" value="4" id="sl-hold2" oninput="updateSlider('hold2',this.value)">
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -636,7 +862,7 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
         </div>
       </div>
       <div>
-        <h3 style="color:var(--white);font-family:var(--font-body);font-weight:600;font-size:1rem;margin-bottom:1rem;">Find a therapist in India</h3>
+        <h3 style="color:#fff;font-family:var(--font-body);font-weight:600;font-size:1rem;margin-bottom:1rem;">Find a therapist in India</h3>
         <div class="help-links">
           <a href="https://icallhelpline.org/seek-help/" target="_blank" rel="noopener" class="help-link">
             <i class="fas fa-user-doctor"></i>
@@ -833,9 +1059,7 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
 
 <script>
 /* =============================================================
-   PHOBIA DATA — with mediaSteps for each phobia
-   Images: Unsplash / Pixabay (free, no-attribution needed at direct URL level for educational use)
-   Videos: YouTube embeds (public educational content)
+   PHOBIA DATA
 ============================================================= */
 const PHOBIAS = [
   {
@@ -846,14 +1070,16 @@ const PHOBIAS = [
     brief: 'One of the most common phobias worldwide, involving intense fear of spiders.',
     description: 'Arachnophobia affects up to 15% of the population. It often develops in childhood and can range from mild discomfort to complete avoidance of areas where spiders might be present.',
     symptoms: ['Immediate intense anxiety when seeing or thinking about spiders','Sweating, trembling, or rapid heartbeat','Avoidance of areas where spiders might live','Difficulty sleeping after seeing a spider','Screaming, freezing, or running away','Inspecting rooms and checking corners before entering'],
+    audioUrl: 'https://github.com/omthakur7/fearfade/raw/refs/heads/main/audios/Arachnophobia.mp3',
+    audioTitle: 'Mindfulness Relaxation Audio',
     mediaSteps: [
-      { desc: 'Read about why spiders are beneficial to the ecosystem', rating: 1, mediaUrl: null, mediaType: null, mediaAlt: 'A delicate spider web with morning dew — nature at work', mediaUrlFallback: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Hausrobbe.JPG/320px-Hausrobbe.JPG' },
-      { desc: 'Look at a cartoon drawing of a friendly spider', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1620059138674-24bdb08ef639?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'Simple artistic illustration of a spider' },
-      { desc: 'View a still photograph of a small house spider from a distance', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1536309444594-e65ee01f7512?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'Small spider on a wall' },
-      { desc: 'Look at a close-up photo of a common garden spider', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1598356918644-7a5af992f40c?q=80&w=748&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'Garden spider on its web' },
-      { desc: 'Watch a short, calm video of a small spider walking slowly', rating: 6, mediaUrl: 'https://www.youtube.com/embed/FfOrLNXIN-8', mediaType: 'video', mediaCaption: 'A calm slow-motion video of a jumping spider — one of nature\'s most agile hunters' },
+      { desc: 'Read about why spiders are beneficial to the ecosystem', rating: 1, mediaUrl: null, mediaType: null, mediaAlt: 'A delicate spider web with morning dew', mediaUrlFallback: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Hausrobbe.JPG/320px-Hausrobbe.JPG' },
+      { desc: 'Look at a cartoon drawing of a friendly spider', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1620059138674-24bdb08ef639?q=80&w=1171&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Simple artistic illustration of a spider' },
+      { desc: 'View a still photograph of a small house spider from a distance', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1536309444594-e65ee01f7512?q=80&w=1170&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Small spider on a wall' },
+      { desc: 'Look at a close-up photo of a common garden spider', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1598356918644-7a5af992f40c?q=80&w=748&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Garden spider on its web' },
+      { desc: 'Watch a short, calm video of a small spider walking slowly', rating: 6, mediaUrl: 'https://www.youtube.com/embed/FfOrLNXIN-8', mediaType: 'video', mediaCaption: 'A calm slow-motion video of a jumping spider' },
       { desc: 'Watch a nature documentary segment about spider behaviour', rating: 7, mediaUrl: 'https://www.youtube.com/embed/8d_cCeeF7rQ', mediaType: 'video', mediaCaption: 'Educational content about spiders in their natural habitat' },
-      { desc: 'Look at a large tarantula photograph for 2 minutes', rating: 8, mediaUrl: 'https://images.unsplash.com/photo-1567939973912-f499537375bd?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A tarantula spider close-up' },
+      { desc: 'Look at a large tarantula photograph for 2 minutes', rating: 8, mediaUrl: 'https://images.unsplash.com/photo-1567939973912-f499537375bd?q=80&w=735&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A tarantula spider close-up' },
       { desc: 'Watch a video of someone confidently handling a tarantula', rating: 9, mediaUrl: 'https://www.youtube.com/embed/v9t1Jk8BC3o', mediaType: 'video', mediaCaption: 'Seeing others calmly handle spiders helps your brain learn there is no danger' }
     ]
   },
@@ -865,15 +1091,17 @@ const PHOBIAS = [
     brief: 'An extreme fear of heights that goes beyond a normal cautious response.',
     description: 'Acrophobia affects roughly 5% of the general population. It triggers intense anxiety even when there is no actual danger — such as looking out of a window or climbing a short ladder.',
     symptoms: ['Dizziness or vertigo near heights','Gripping surfaces tightly when elevated','Refusing to use escalators, balconies, or bridges','Anxiety when others approach an edge','Crawling or kneeling rather than standing','Panic attacks in high places'],
+    audioUrl: 'https://github.com/omthakur7/fearfade/raw/refs/heads/main/audios/Acrophobia.mp3',
+    audioTitle: 'Grounding Relaxation Audio',
     mediaSteps: [
-      { desc: 'Look at a peaceful photo of rolling hills from ground level', rating: 1, mediaUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80', mediaType: 'image', mediaAlt: 'Beautiful mountain landscape viewed from ground level' },
-      { desc: 'View a photo of a gentle staircase', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1530299363930-f646660f8ad6?q=80&w=765&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A staircase going up a hillside' },
-      { desc: 'Look at a photo taken from a fourth-floor', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1761772438268-8fea7a777496?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'View from a second floor window overlooking a garden' },
-      { desc: 'View a photo from the top of a small cliff or hill', rating: 5, mediaUrl: 'https://plus.unsplash.com/premium_photo-1661821182906-e465194a34ac?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'View from the top of a moderate hill' },
-      { desc: 'Watch a calm walking video on a mountain trail', rating: 6, mediaUrl: 'https://www.youtube.com/embed/xETUkHustpQ', mediaType: 'video', mediaCaption: 'A relaxing walk along a scenic mountain path — breathe and notice the beauty' },
-      { desc: 'Look at a photo from the top of a tall building', rating: 7, mediaUrl: 'https://images.unsplash.com/photo-1570095072487-1b697e72bfe5?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'City skyline view from a tall building' },
-      { desc: 'Watch a video filmed from a skyscraper observation deck', rating: 8, mediaUrl: 'https://www.youtube.com/embed/D0dwqgDytpc', mediaType: 'video', mediaCaption: 'Stay with the video — notice anxiety rise, then fall as you remain safe' },
-      { desc: 'View a first-person perspective video on a high bridge', rating: 9, mediaUrl: 'https://www.youtube.com/embed/nBs4-Tg6edo', mediaType: 'video', mediaCaption: 'You are watching from the safety of your screen — your brain is learning heights can be safe' }
+      { desc: 'Look at a peaceful photo of rolling hills from ground level', rating: 1, mediaUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80', mediaType: 'image', mediaAlt: 'Beautiful mountain landscape from ground level' },
+      { desc: 'View a photo of a gentle staircase', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1530299363930-f646660f8ad6?q=80&w=765&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A staircase going up a hillside' },
+      { desc: 'Look at a photo taken from a fourth-floor', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1761772438268-8fea7a777496?q=80&w=687&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'View from a second floor window' },
+      { desc: 'View a photo from the top of a small cliff or hill', rating: 5, mediaUrl: 'https://plus.unsplash.com/premium_photo-1661821182906-e465194a34ac?q=80&w=688&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'View from the top of a moderate hill' },
+      { desc: 'Watch a calm walking video on a mountain trail', rating: 6, mediaUrl: 'https://www.youtube.com/embed/xETUkHustpQ', mediaType: 'video', mediaCaption: 'A relaxing walk along a scenic mountain path' },
+      { desc: 'Look at a photo from the top of a tall building', rating: 7, mediaUrl: 'https://images.unsplash.com/photo-1570095072487-1b697e72bfe5?q=80&w=1074&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'City skyline view from a tall building' },
+      { desc: 'Watch a video filmed from a skyscraper observation deck', rating: 8, mediaUrl: 'https://www.youtube.com/embed/D0dwqgDytpc', mediaType: 'video', mediaCaption: 'Stay with the video — notice anxiety rise, then fall' },
+      { desc: 'View a first-person perspective video on a high bridge', rating: 9, mediaUrl: 'https://www.youtube.com/embed/nBs4-Tg6edo', mediaType: 'video', mediaCaption: 'You are watching from the safety of your screen' }
     ]
   },
   {
@@ -884,15 +1112,17 @@ const PHOBIAS = [
     brief: 'An intense fear of being in small or confined spaces, such as lifts or tunnels.',
     description: 'Claustrophobia is experienced by around 12.5% of people at some point. It can be triggered by physical confinement or simply by the perception of limited escape routes.',
     symptoms: ['Panic when doors are closed','Needing to sit near exits','Sweating and hyperventilating in enclosed spaces','Fear of being trapped or losing control','Avoiding lifts, tunnels, and small rooms','Checking exits upon entering new spaces'],
+    audioUrl: 'https://github.com/omthakur7/fearfade/raw/refs/heads/main/audios/Claustrophobia.mp3',
+    audioTitle: 'Breathing Space Relaxation Audio',
     mediaSteps: [
-      { desc: 'Look at a photo of a cosy reading nook or small, comfortable room', rating: 1, mediaUrl: 'https://images.unsplash.com/photo-1524155854671-62fc641aa612?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A warm and cosy reading nook — small but comfortable' },
-      { desc: 'View a photo of a lift lobby (outside the lift)', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1650064174374-c88e63c5b744?q=80&w=1250&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A bright modern lift lobby' },
-      { desc: 'Look at a photo taken inside a spacious lift', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1547630824-eed1be6a27b0?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'Inside a modern lift with open doors' },
-      { desc: 'View a photo inside a narrow underground tunnel with light at the end', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1631713895666-b834e9a3a81c?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A tunnel with bright light at the end — there is always a way out' },
-      { desc: 'Watch a calm video tour inside a submarine or narrow corridor', rating: 6, mediaUrl: 'https://www.youtube.com/embed/HGFUR7WmFP0', mediaType: 'video', mediaCaption: 'Practice breathing slowly while watching — notice you are in control' },
-      { desc: 'Watch a first-person perspective of someone entering a lift calmly', rating: 7, mediaUrl: 'https://www.youtube.com/embed/zStY3ILhHco', mediaType: 'video', mediaCaption: 'Observe the doors close and open again — the person remains calm throughout' },
-      { desc: 'View a photo taken inside a small MRI machine', rating: 8, mediaUrl: 'https://plus.unsplash.com/premium_photo-1664303970101-ae9c00338cf4?q=80&w=734&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'View from inside an MRI scanner — bright, controlled environment' },
-      { desc: 'Watch a guided visualisation video for claustrophobia', rating: 9, mediaUrl: 'https://www.youtube.com/embed/Nd8eaLmolWQ', mediaType: 'video', mediaCaption: 'This video guides you through a calm, systematic exposure using breathing techniques' }
+      { desc: 'Look at a photo of a cosy reading nook', rating: 1, mediaUrl: 'https://images.unsplash.com/photo-1524155854671-62fc641aa612?q=80&w=1170&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A warm and cosy reading nook' },
+      { desc: 'View a photo of a lift lobby (outside the lift)', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1650064174374-c88e63c5b744?q=80&w=1250&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A bright modern lift lobby' },
+      { desc: 'Look at a photo taken inside a spacious lift', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1547630824-eed1be6a27b0?q=80&w=2070&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Inside a modern lift with open doors' },
+      { desc: 'View a photo inside a narrow underground tunnel', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1631713895666-b834e9a3a81c?q=80&w=687&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A tunnel with bright light at the end' },
+      { desc: 'Watch a calm video tour inside a submarine', rating: 6, mediaUrl: 'https://www.youtube.com/embed/HGFUR7WmFP0', mediaType: 'video', mediaCaption: 'Practice breathing slowly while watching' },
+      { desc: 'Watch a first-person perspective of someone entering a lift', rating: 7, mediaUrl: 'https://www.youtube.com/embed/zStY3ILhHco', mediaType: 'video', mediaCaption: 'Observe the doors close and open again' },
+      { desc: 'View a photo taken inside a small MRI machine', rating: 8, mediaUrl: 'https://plus.unsplash.com/premium_photo-1664303970101-ae9c00338cf4?q=80&w=734&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'View from inside an MRI scanner' },
+      { desc: 'Watch a guided visualisation video for claustrophobia', rating: 9, mediaUrl: 'https://www.youtube.com/embed/Nd8eaLmolWQ', mediaType: 'video', mediaCaption: 'This video guides you through calm, systematic exposure' }
     ]
   },
   {
@@ -903,15 +1133,17 @@ const PHOBIAS = [
     brief: 'Fear of travelling by air, affecting an estimated 25% of the population.',
     description: 'Aviophobia ranges from mild nervousness to complete refusal to fly. It often combines claustrophobia, acrophobia, and loss-of-control anxiety.',
     symptoms: ['Refusing to board aircraft','Intense anxiety days before a flight','Gripping armrests, sweating, or trembling','Catastrophic thoughts about crashes','Monitoring every sound and movement','Drinking alcohol to cope'],
+    audioUrl: 'https://github.com/omthakur7/fearfade/raw/refs/heads/main/audios/Aviophobia.mp3',
+    audioTitle: 'Calm Flight Relaxation Audio',
     mediaSteps: [
-      { desc: 'Look at a photo of aircraft parked safely at a terminal gate', rating: 1, mediaUrl: 'https://plus.unsplash.com/premium_photo-1661963090269-dcb0d1929cda?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'Commercial aircraft parked peacefully at an airport gate' },
-      { desc: 'View a photo of a bright, spacious airport departure lounge', rating: 2, mediaUrl: 'https://plus.unsplash.com/premium_photo-1733317275880-efc038690422?q=80&w=1295&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'Modern airport departure hall — clean and airy' },
-      { desc: 'Look at a photo of a comfortable airplane cabin interior', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1608023136037-626dad6c6188?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'Empty airplane cabin interior — comfortable seats and windows' },
-      { desc: 'View a photo of clouds seen from a plane window (calm day)', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1565444007614-6b38c78224df?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'Beautiful clouds seen from a plane window on a clear day' },
-      { desc: 'Watch a smooth, calm take-off video from the cockpit', rating: 6, mediaUrl: 'https://www.youtube.com/embed/16XTAK-4Xbk', mediaType: 'video', mediaCaption: 'A smooth take-off — notice how gradual and controlled the process is' },
-      { desc: 'Watch an educational video explaining how planes stay in the air', rating: 5, mediaUrl: 'https://www.youtube.com/embed/wuQW8NA47pM', mediaType: 'video', mediaCaption: 'Understanding the physics of flight helps your rational mind reassure your anxious one' },
-      { desc: 'Watch a full landing sequence video from the cockpit', rating: 7, mediaUrl: 'https://www.youtube.com/embed/tqN2fnhr_Hc', mediaType: 'video', mediaCaption: 'A calm, professional landing — notice the precision and control of the pilots' },
-      { desc: 'Watch a full 10-minute in-flight cabin video from departure to landing', rating: 8, mediaUrl: 'https://www.youtube.com/embed/I8G0W21CNe4', mediaType: 'video', mediaCaption: 'Stay with this video for the full duration — breathe and let anxiety rise, then subside' }
+      { desc: 'Look at a photo of aircraft parked safely at a terminal', rating: 1, mediaUrl: 'https://plus.unsplash.com/premium_photo-1661963090269-dcb0d1929cda?q=80&w=1170&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Commercial aircraft parked at an airport gate' },
+      { desc: 'View a photo of a bright airport departure lounge', rating: 2, mediaUrl: 'https://plus.unsplash.com/premium_photo-1733317275880-efc038690422?q=80&w=1295&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Modern airport departure hall' },
+      { desc: 'Look at a photo of a comfortable airplane cabin', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1608023136037-626dad6c6188?q=80&w=1172&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Empty airplane cabin interior' },
+      { desc: 'View a photo of clouds from a plane window', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1565444007614-6b38c78224df?q=80&w=688&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Beautiful clouds seen from a plane window' },
+      { desc: 'Watch a smooth, calm take-off video', rating: 6, mediaUrl: 'https://www.youtube.com/embed/16XTAK-4Xbk', mediaType: 'video', mediaCaption: 'A smooth take-off — notice how gradual and controlled it is' },
+      { desc: 'Watch an educational video about how planes fly', rating: 5, mediaUrl: 'https://www.youtube.com/embed/wuQW8NA47pM', mediaType: 'video', mediaCaption: 'Understanding flight helps your rational mind reassure your anxious one' },
+      { desc: 'Watch a full landing sequence from the cockpit', rating: 7, mediaUrl: 'https://www.youtube.com/embed/tqN2fnhr_Hc', mediaType: 'video', mediaCaption: 'A calm, professional landing' },
+      { desc: 'Watch a full 10-minute in-flight cabin video', rating: 8, mediaUrl: 'https://www.youtube.com/embed/I8G0W21CNe4', mediaType: 'video', mediaCaption: 'Stay with this video for the full duration' }
     ]
   },
   {
@@ -922,15 +1154,17 @@ const PHOBIAS = [
     brief: 'The most common phobia globally — affecting up to 75% of people.',
     description: 'Glossophobia encompasses fear of speaking in front of groups. It is rooted in fear of negative evaluation and can prevent career advancement.',
     symptoms: ['Voice trembling or going blank when speaking','Avoiding speaking in meetings or classes','Intense blushing, sweating, or heart racing','Rehearsing conversations obsessively','Declining promotions to avoid presentations','Negative self-talk about performance'],
+    audioUrl: 'https://github.com/omthakur7/fearfade/raw/refs/heads/main/audios/Glossophobia.mp3',
+    audioTitle: 'Confidence Building Relaxation Audio',
     mediaSteps: [
-      { desc: 'Watch a TED Talk where the speaker looks nervous but succeeds', rating: 1, mediaUrl: 'https://www.youtube.com/embed/aS0_LiSaRIQ', mediaType: 'video', mediaCaption: 'Notice that even experienced speakers feel nervous — and still succeed brilliantly' },
-      { desc: 'Look at a photo of an empty lecture hall or conference room', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1560523160-c4ef2f0c61a9?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'An empty auditorium — imagine walking in confidently' },
-      { desc: 'View a photo of a small group of friendly-looking people listening', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1670382417551-d2f1ee29aea4?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A small, attentive and friendly audience' },
-      { desc: 'Watch someone deliver a short, casual team presentation at work', rating: 4, mediaUrl: 'https://www.youtube.com/embed/_GRHmJjcTi0', mediaType: 'video', mediaCaption: 'An informal workplace presentation — relaxed, normal, achievable' },
-      { desc: 'View a photo of a person confidently standing at a podium', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1771340591273-b509bd520400?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A confident speaker at a podium addressing an audience' },
-      { desc: 'Watch a motivational talk about overcoming fear of speaking', rating: 6, mediaUrl: 'https://www.youtube.com/embed/-FyVetL1MEw', mediaType: 'video', mediaCaption: 'Hear stories from people who overcame glossophobia using gradual exposure' },
-      { desc: 'Watch a large TED stage presentation with a full audience', rating: 7, mediaUrl: 'https://www.youtube.com/embed/gUV5DJb6KGs', mediaType: 'video', mediaCaption: 'Imagine yourself on that stage — breathe, you are safe, the audience wants you to succeed' },
-      { desc: 'Visualise speaking to 100 people using this guided imagery', rating: 8, mediaUrl: 'https://www.youtube.com/embed/Ke7spa6Pkvg', mediaType: 'video', mediaCaption: 'A guided visualisation for public speaking confidence — listen with eyes closed' }
+      { desc: 'Watch a TED Talk where the speaker looks nervous but succeeds', rating: 1, mediaUrl: 'https://www.youtube.com/embed/aS0_LiSaRIQ', mediaType: 'video', mediaCaption: 'Notice that even experienced speakers feel nervous' },
+      { desc: 'Look at a photo of an empty lecture hall', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1560523160-c4ef2f0c61a9?q=80&w=1170&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'An empty auditorium' },
+      { desc: 'View a photo of a small group of friendly listeners', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1670382417551-d2f1ee29aea4?q=80&w=1170&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A small, attentive and friendly audience' },
+      { desc: 'Watch someone deliver a short, casual team presentation', rating: 4, mediaUrl: 'https://www.youtube.com/embed/_GRHmJjcTi0', mediaType: 'video', mediaCaption: 'An informal workplace presentation' },
+      { desc: 'View a photo of a person confidently at a podium', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1771340591273-b509bd520400?q=80&w=735&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A confident speaker at a podium' },
+      { desc: 'Watch a motivational talk about overcoming speaking fear', rating: 6, mediaUrl: 'https://www.youtube.com/embed/-FyVetL1MEw', mediaType: 'video', mediaCaption: 'Hear stories from people who overcame glossophobia' },
+      { desc: 'Watch a large TED stage presentation with full audience', rating: 7, mediaUrl: 'https://www.youtube.com/embed/gUV5DJb6KGs', mediaType: 'video', mediaCaption: 'Imagine yourself on that stage — breathe' },
+      { desc: 'Visualise speaking to 100 people using guided imagery', rating: 8, mediaUrl: 'https://www.youtube.com/embed/Ke7spa6Pkvg', mediaType: 'video', mediaCaption: 'A guided visualisation for public speaking confidence' }
     ]
   },
   {
@@ -941,15 +1175,17 @@ const PHOBIAS = [
     brief: 'Fear of situations where escape might be difficult during a panic attack.',
     description: 'Agoraphobia involves anxiety about any situation where escape seems difficult — supermarkets, public transport, queues, or even leaving home.',
     symptoms: ['Fear of leaving home alone','Avoiding crowded places or public transport','Needing a companion to go out','Feeling that familiar places are suddenly unsafe','Fear of embarrassing oneself if panicking','Restricting activities to a narrow safe zone'],
+    audioUrl: 'https://github.com/omthakur7/fearfade/raw/refs/heads/main/audios/Agoraphobia.mp3',
+    audioTitle: 'Safe Space Relaxation Audio',
     mediaSteps: [
-      { desc: 'Look at a calm photo of your front door from inside your home', rating: 1, mediaUrl: 'https://images.unsplash.com/photo-1591091421779-f5ffb333c27c?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'The threshold of a front door — you can open it anytime you choose' },
-      { desc: 'View a photo of a quiet, peaceful street with very few people', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1723126004572-f0d477ff3cf2?q=80&w=694&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A calm, near-empty residential street on a sunny morning' },
-      { desc: 'Look at a photo of a small, uncrowded local shop', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1683027301758-5a09c546a65a?q=80&w=627&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A small, quiet local shop interior with few customers' },
-      { desc: 'View a photo of a moderately busy city pavement', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1632495493517-c26bcaeb7731?q=80&w=1334&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A busy but manageable city street scene' },
-      { desc: 'Watch a first-person walking video through a quiet park', rating: 4, mediaUrl: 'https://www.youtube.com/embed/iWSjBBQbICA', mediaType: 'video', mediaCaption: 'Walk alongside this video — breathe the fresh air, notice you are perfectly safe' },
-      { desc: 'View a photo of a busy supermarket interior', rating: 6, mediaUrl: 'https://images.unsplash.com/photo-1742036626607-3ae1ac406cae?q=80&w=1169&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A busy supermarket with many people — exits are always visible' },
-      { desc: 'Watch a first-person video of a busy shopping centre', rating: 7, mediaUrl: 'https://www.youtube.com/embed/rCxmQ6uC574', mediaType: 'video', mediaCaption: 'Stay with this scene — notice that the person filming remains calm throughout' },
-      { desc: 'Watch a busy city square video from multiple angles', rating: 8, mediaUrl: 'https://www.youtube.com/embed/xfgYQSRBTpI', mediaType: 'video', mediaCaption: 'A crowded public space — exits are everywhere, you are in control' }
+      { desc: 'Look at a calm photo of your front door from inside', rating: 1, mediaUrl: 'https://images.unsplash.com/photo-1591091421779-f5ffb333c27c?q=80&w=687&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'The threshold of a front door' },
+      { desc: 'View a photo of a quiet, peaceful street', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1723126004572-f0d477ff3cf2?q=80&w=694&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A calm near-empty residential street' },
+      { desc: 'Look at a photo of a small, uncrowded local shop', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1683027301758-5a09c546a65a?q=80&w=627&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A small quiet local shop' },
+      { desc: 'View a photo of a moderately busy city pavement', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1632495493517-c26bcaeb7731?q=80&w=1334&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A busy but manageable city street' },
+      { desc: 'Watch a first-person walking video through a quiet park', rating: 4, mediaUrl: 'https://www.youtube.com/embed/iWSjBBQbICA', mediaType: 'video', mediaCaption: 'Walk alongside this video — breathe the fresh air' },
+      { desc: 'View a photo of a busy supermarket interior', rating: 6, mediaUrl: 'https://images.unsplash.com/photo-1742036626607-3ae1ac406cae?q=80&w=1169&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A busy supermarket with many people' },
+      { desc: 'Watch a first-person video of a busy shopping centre', rating: 7, mediaUrl: 'https://www.youtube.com/embed/rCxmQ6uC574', mediaType: 'video', mediaCaption: 'Stay with this scene — notice the person remains calm' },
+      { desc: 'Watch a busy city square video from multiple angles', rating: 8, mediaUrl: 'https://www.youtube.com/embed/xfgYQSRBTpI', mediaType: 'video', mediaCaption: 'A crowded public space — exits are everywhere' }
     ]
   },
   {
@@ -960,15 +1196,17 @@ const PHOBIAS = [
     brief: 'An intense, persistent fear of dogs that causes anxiety disproportionate to danger.',
     description: 'Cynophobia often develops after a negative experience with a dog in childhood. Sufferers may cross roads to avoid dogs or be unable to walk in parks.',
     symptoms: ['Crossing roads to avoid dogs','Freezing or running when a dog approaches','Inability to visit homes with pets','Scanning environments for dogs','Intense anxiety when hearing barking','Heart racing, sweating, or shaking near dogs'],
+    audioUrl: 'https://github.com/omthakur7/fearfade/raw/refs/heads/main/audios/Cynophobia.mp3',
+    audioTitle: 'Calm Presence Relaxation Audio',
     mediaSteps: [
-      { desc: 'Look at a cartoon drawing of a friendly', rating: 1, mediaUrl: 'https://images.unsplash.com/photo-1626805660992-3c9070e7d854?q=80&w=735&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A happy cartoon-style friendly dog illustration' },
-      { desc: 'View a photo of a small sleeping puppy', rating: 2, mediaUrl: 'https://plus.unsplash.com/premium_photo-1663127239715-258c04a14f26?q=80&w=1172&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A tiny sleeping puppy — completely calm and harmless' },
-      { desc: 'Look at a photo of a calm, small dog on a lead far away', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1759505478066-5e7b4e62c280?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A small calm dog sitting on a lead from a distance' },
-      { desc: 'View a photo of a medium dog lying calmly in a garden', rating: 4, mediaUrl: 'https://plus.unsplash.com/premium_photo-1664371206949-8efc19379c7a?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A relaxed medium-sized dog resting in a garden' },
-      { desc: 'Watch a calm video of puppies playing together (no barking)', rating: 5, mediaUrl: 'https://www.youtube.com/embed/6v4OgilckIc', mediaType: 'video', mediaCaption: 'Puppies at play — gentle, curious, and completely harmless' },
-      { desc: 'View a photo of a large dog sitting obediently', rating: 6, mediaUrl: 'https://plus.unsplash.com/premium_photo-1666777247416-ee7a95235559?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A large dog sitting calmly and obediently with its owner' },
-      { desc: 'Watch a video of someone being greeted by a friendly dog', rating: 7, mediaUrl: 'https://www.youtube.com/embed/Ay8LHna4g-c', mediaType: 'video', mediaCaption: 'A warm greeting between human and dog — joyful and safe' },
-      { desc: 'Watch a dog training video showing obedient behaviour', rating: 8, mediaUrl: 'https://www.youtube.com/embed/FqUra90O0Sc', mediaType: 'video', mediaCaption: 'Seeing how well-trained dogs respond to commands builds confidence that dogs are controllable' }
+      { desc: 'Look at a cartoon drawing of a friendly dog', rating: 1, mediaUrl: 'https://images.unsplash.com/photo-1626805660992-3c9070e7d854?q=80&w=735&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A happy cartoon-style friendly dog' },
+      { desc: 'View a photo of a small sleeping puppy', rating: 2, mediaUrl: 'https://plus.unsplash.com/premium_photo-1663127239715-258c04a14f26?q=80&w=1172&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A tiny sleeping puppy' },
+      { desc: 'Look at a photo of a calm, small dog on a lead far away', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1759505478066-5e7b4e62c280?q=80&w=1170&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A small calm dog on a lead' },
+      { desc: 'View a photo of a medium dog lying calmly in a garden', rating: 4, mediaUrl: 'https://plus.unsplash.com/premium_photo-1664371206949-8efc19379c7a?q=80&w=687&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A relaxed medium-sized dog in a garden' },
+      { desc: 'Watch a calm video of puppies playing together', rating: 5, mediaUrl: 'https://www.youtube.com/embed/6v4OgilckIc', mediaType: 'video', mediaCaption: 'Puppies at play — gentle, curious, and completely harmless' },
+      { desc: 'View a photo of a large dog sitting obediently', rating: 6, mediaUrl: 'https://plus.unsplash.com/premium_photo-1666777247416-ee7a95235559?q=80&w=687&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A large dog sitting calmly' },
+      { desc: 'Watch a video of someone being greeted by a friendly dog', rating: 7, mediaUrl: 'https://www.youtube.com/embed/Ay8LHna4g-c', mediaType: 'video', mediaCaption: 'A warm greeting between human and dog' },
+      { desc: 'Watch a dog training video showing obedient behaviour', rating: 8, mediaUrl: 'https://www.youtube.com/embed/FqUra90O0Sc', mediaType: 'video', mediaCaption: 'Seeing well-trained dogs respond to commands builds confidence' }
     ]
   },
   {
@@ -979,15 +1217,15 @@ const PHOBIAS = [
     brief: 'A distressing fear of vomiting or seeing others vomit, often leading to dietary restriction.',
     description: 'Emetophobia affects an estimated 0.1–8.8% of the population and causes people to avoid situations where vomiting might occur.',
     symptoms: ['Avoiding certain foods or restaurants','Excessive checking of expiry dates','Refusing alcohol or medications','Avoiding travel for fear of motion sickness','Keeping close to bathrooms','Intense anxiety when others feel unwell'],
+    audioUrl: 'https://github.com/omthakur7/fearfade/raw/refs/heads/main/audios/Emetophobia.mp3',
+    audioTitle: 'Body Acceptance Relaxation Audio',
     mediaSteps: [
-      { desc: 'Read an article about the body\'s protective mechanisms — why nausea exists', rating: 1, mediaUrl: null, mediaType: null, mediaAlt: 'A calm medical illustration showing the digestive system — understanding reduces fear' },
-      { desc: 'Look at a photo of healthy, pleasant food you enjoy', rating: 1, mediaUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=684&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A beautifully plated nutritious meal — food is nourishment' },
-      { desc: 'View a photo of a restaurant setting with people eating comfortably', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1769611445807-f0a4c369df22?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A pleasant restaurant with people dining happily' },
-      { desc: 'Watch a calming mindfulness video about accepting bodily sensations', rating: 3, mediaUrl: 'https://www.youtube.com/embed/kt5ZoeXkC7w', mediaType: 'video', mediaCaption: 'Mindfulness helps us observe bodily sensations without catastrophising them' },
-      { desc: 'Read a brief educational text about how rare actual vomiting episodes are', rating: 4, mediaUrl: null, mediaType: null, mediaAlt: 'A calm clinical setting — modern medicine manages nausea effectively' },
-      { desc: 'View a photo of a hospital or clinic — safe environments', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?q=80&w=1228&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', mediaType: 'image', mediaAlt: 'A clean, calm hospital corridor — a place of safety and care' },
-      { desc: 'Watch a therapy explanation video about emetophobia recovery', rating: 6, mediaUrl: 'https://www.youtube.com/embed/YtifvkN0U4w', mediaType: 'video', mediaCaption: 'A psychologist explains how others have recovered from emetophobia using CBT' },
-      { desc: 'Practise a full anxiety-tolerance exercise while feeling mild discomfort', rating: 7, mediaUrl: 'https://www.youtube.com/embed/RFuYcIy6Vxc', mediaType: 'video', mediaCaption: 'A guided breathing and body-scan exercise — anxiety is temporary, you can tolerate it' }
+      { desc: 'Look at a photo of healthy, pleasant food you enjoy', rating: 1, mediaUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=684&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A beautifully plated nutritious meal' },
+      { desc: 'View a photo of a restaurant with people eating comfortably', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1769611445807-f0a4c369df22?q=80&w=1170&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A pleasant restaurant with people dining' },
+      { desc: 'Watch a calming mindfulness video about accepting bodily sensations', rating: 3, mediaUrl: 'https://www.youtube.com/embed/kt5ZoeXkC7w', mediaType: 'video', mediaCaption: 'Mindfulness helps us observe bodily sensations without catastrophising' },
+      { desc: 'View a photo of a hospital or clinic — safe environments', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?q=80&w=1228&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'A clean, calm hospital corridor' },
+      { desc: 'Watch a therapy explanation video about emetophobia recovery', rating: 6, mediaUrl: 'https://www.youtube.com/embed/YtifvkN0U4w', mediaType: 'video', mediaCaption: 'A psychologist explains CBT recovery from emetophobia' },
+      { desc: 'Practise a full anxiety-tolerance exercise', rating: 7, mediaUrl: 'https://www.youtube.com/embed/RFuYcIy6Vxc', mediaType: 'video', mediaCaption: 'A guided breathing and body-scan exercise' }
     ]
   }
 ];
@@ -1021,21 +1259,409 @@ const VIDEOS = [
 ];
 
 /* =============================================================
-   FEAR LADDER STATE
+   STATE
 ============================================================= */
 let ladder = JSON.parse(localStorage.getItem('ff_ladder') || '[]');
 let journalEntries = JSON.parse(localStorage.getItem('ff_journal') || '[]');
 let sortableInstance = null;
 
 /* =============================================================
+   NEW FEATURE 4: DARK MODE
+============================================================= */
+function toggleDarkMode() {
+  const isDark = document.body.classList.toggle('dark-mode');
+  localStorage.setItem('ff_darkmode', isDark ? '1' : '0');
+  const icon = document.getElementById('dark-toggle-icon');
+  icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+function applyStoredTheme() {
+  const stored = localStorage.getItem('ff_darkmode');
+  if (stored === '1') {
+    document.body.classList.add('dark-mode');
+    const icon = document.getElementById('dark-toggle-icon');
+    if (icon) icon.className = 'fas fa-sun';
+  }
+}
+
+/* =============================================================
+   NEW FEATURE 2: STREAK & ACHIEVEMENTS
+   - Tracks consecutive days with any activity
+   - Awards badges based on milestones
+============================================================= */
+const BADGE_DEFS = [
+  { id: 'beginner',    emoji: '🏅', label: 'Beginner',       condition: (s) => s.totalRungs >= 1 },
+  { id: 'stepping_up', emoji: '🌟', label: 'Stepping Up',    condition: (s) => s.totalRungs >= 5 },
+  { id: 'challenger',  emoji: '🚀', label: 'Fear Challenger', condition: (s) => s.totalRungs >= 10 },
+  { id: 'fader',       emoji: '🏆', label: 'Fear Fader',     condition: (s) => s.totalRungs >= 20 },
+  { id: 'on_fire',     emoji: '🔥', label: 'On Fire',        condition: (s) => s.streak >= 7 },
+  { id: 'chronicler',  emoji: '📚', label: 'Chronicler',     condition: (s) => s.journalCount >= 30 }
+];
+
+function loadStreakData() {
+  return JSON.parse(localStorage.getItem('ff_streak') || JSON.stringify({
+    streak: 0,
+    lastDate: null,
+    earnedBadges: [],
+    totalRungs: 0,
+    journalCount: 0
+  }));
+}
+
+function saveStreakData(d) {
+  localStorage.setItem('ff_streak', JSON.stringify(d));
+}
+
+function recordActivity() {
+  const d = loadStreakData();
+  const today = new Date().toDateString();
+  if (d.lastDate === today) return; // already recorded today
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (d.lastDate === yesterday) {
+    d.streak += 1;
+  } else if (d.lastDate !== today) {
+    d.streak = 1; // reset streak (missed a day)
+  }
+  d.lastDate = today;
+  saveStreakData(d);
+  checkBadges();
+}
+
+function checkBadges() {
+  const d = loadStreakData();
+  // Update counts from current data
+  d.totalRungs = ladder.filter(r => r.completed).length;
+  d.journalCount = journalEntries.length;
+  const newlyEarned = [];
+  BADGE_DEFS.forEach(b => {
+    if (!d.earnedBadges.includes(b.id) && b.condition(d)) {
+      d.earnedBadges.push(b.id);
+      newlyEarned.push(b);
+    }
+  });
+  saveStreakData(d);
+  newlyEarned.forEach(b => showToast(`${b.emoji} Badge earned: ${b.label}!`));
+  renderStreakUI();
+}
+
+function renderStreakUI() {
+  const d = loadStreakData();
+  const countEl = document.getElementById('streak-count');
+  const labelEl = document.getElementById('streak-label');
+  const pillsEl = document.getElementById('badge-pills');
+  if (!countEl) return;
+  countEl.textContent = d.streak;
+  labelEl.textContent = d.streak === 1 ? 'day streak' : 'day streak';
+  // Render all badges (earned ones highlighted)
+  pillsEl.innerHTML = BADGE_DEFS.map(b => {
+    const isEarned = d.earnedBadges.includes(b.id);
+    return `<span class="badge-pill ${isEarned ? 'earned' : ''}" title="${b.label}${isEarned ? ' — Earned!' : ' — Not yet earned'}">${b.emoji} ${b.label}</span>`;
+  }).join('');
+}
+
+/* =============================================================
+   NEW FEATURE 3: EXPORT DATA
+============================================================= */
+function toggleExportMenu() {
+  const menu = document.getElementById('export-menu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  // Close on outside click
+  if (menu.style.display === 'block') {
+    setTimeout(() => {
+      document.addEventListener('click', function closeMenu(e) {
+        if (!document.getElementById('export-btn').contains(e.target) &&
+            !menu.contains(e.target)) {
+          menu.style.display = 'none';
+          document.removeEventListener('click', closeMenu);
+        }
+      });
+    }, 10);
+  }
+}
+
+function exportJSON() {
+  document.getElementById('export-menu').style.display = 'none';
+  const prog = {};
+  ['dogs','flying'].forEach(id => {
+    const s = localStorage.getItem('ff_prog_'+id);
+    if (s) prog[id] = JSON.parse(s);
+  });
+  const data = {
+    exportDate: new Date().toISOString(),
+    ladder,
+    journalEntries,
+    programProgress: prog,
+    streak: loadStreakData()
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  downloadBlob(blob, 'fearfade-export.json');
+  showToast('📦 JSON export downloaded!');
+}
+
+function exportCSV() {
+  document.getElementById('export-menu').style.display = 'none';
+  let csv = 'Type,Description,Rating,Completed,Date\n';
+  ladder.forEach(r => {
+    csv += `Rung,"${r.desc.replace(/"/g,'""')}",${r.rating},${r.completed ? 'Yes' : 'No'},"${r.completedDate || ''}"\n`;
+  });
+  csv += '\nJournal Date,Entry\n';
+  journalEntries.forEach(e => {
+    csv += `"${e.date}","${e.content.replace(/"/g,'""')}"\n`;
+  });
+  const blob = new Blob([csv], {type: 'text/csv'});
+  downloadBlob(blob, 'fearfade-export.csv');
+  showToast('📊 CSV export downloaded!');
+}
+
+function exportPDF() {
+  document.getElementById('export-menu').style.display = 'none';
+  const d = loadStreakData();
+  const completedRungs = ladder.filter(r => r.completed);
+  const totalRungs = ladder.length;
+  const recentJournal = journalEntries.slice(0, 5);
+
+  const content = `
+    <div style="font-family: 'DM Sans', sans-serif; padding: 2rem; max-width: 700px; margin: auto; color: #2c3e35;">
+      <div style="text-align:center; margin-bottom: 2rem; border-bottom: 2px solid #5a8a6a; padding-bottom: 1.5rem;">
+        <h1 style="font-size: 2rem; color: #1e2d24; margin-bottom: 0.25rem;">🌿 FearFade Progress Report</h1>
+        <p style="color: #6b7c74; font-size: 0.9rem;">Generated on ${new Date().toLocaleDateString('en-IN', {weekday:'long', year:'numeric', month:'long', day:'numeric'})}</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+        <div style="text-align:center; background: #e8f2ec; border-radius: 12px; padding: 1rem;">
+          <strong style="font-size: 1.5rem; display: block; color: #3d6b4f;">${d.streak}</strong>
+          <span style="font-size: 0.8rem; color: #6b7c74;">Day Streak 🔥</span>
+        </div>
+        <div style="text-align:center; background: #edf3f7; border-radius: 12px; padding: 1rem;">
+          <strong style="font-size: 1.5rem; display: block; color: #2f4455;">${completedRungs.length}/${totalRungs}</strong>
+          <span style="font-size: 0.8rem; color: #6b7c74;">Rungs Completed</span>
+        </div>
+        <div style="text-align:center; background: #f5f0e8; border-radius: 12px; padding: 1rem;">
+          <strong style="font-size: 1.5rem; display: block; color: #1e2d24;">${journalEntries.length}</strong>
+          <span style="font-size: 0.8rem; color: #6b7c74;">Journal Entries</span>
+        </div>
+      </div>
+
+      ${completedRungs.length ? `
+      <h2 style="font-size: 1.2rem; color: #1e2d24; margin-bottom: 1rem; border-bottom: 1px solid #d8e4dc; padding-bottom: 0.5rem;">✅ Completed Rungs</h2>
+      <ul style="list-style: none; padding: 0; margin-bottom: 2rem;">
+        ${completedRungs.map(r => `<li style="padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem;">
+          <span style="background: #5a8a6a; color: white; border-radius: 99px; padding: 0.1rem 0.5rem; font-size: 0.75rem; margin-right: 0.5rem;">${r.rating}/10</span>
+          ${escHtml(r.desc)}
+        </li>`).join('')}
+      </ul>` : ''}
+
+      ${d.earnedBadges.length ? `
+      <h2 style="font-size: 1.2rem; color: #1e2d24; margin-bottom: 1rem; border-bottom: 1px solid #d8e4dc; padding-bottom: 0.5rem;">🏆 Earned Badges</h2>
+      <p style="margin-bottom: 2rem;">${d.earnedBadges.map(bid => {
+        const b = BADGE_DEFS.find(x => x.id === bid);
+        return b ? `${b.emoji} ${b.label}` : '';
+      }).filter(Boolean).join('  •  ')}</p>` : ''}
+
+      ${recentJournal.length ? `
+      <h2 style="font-size: 1.2rem; color: #1e2d24; margin-bottom: 1rem; border-bottom: 1px solid #d8e4dc; padding-bottom: 0.5rem;">📔 Recent Journal Entries</h2>
+      ${recentJournal.map(e => `
+        <div style="background: #f5f0e8; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; border-left: 3px solid #5a8a6a;">
+          <p style="font-size: 0.75rem; color: #6b7c74; margin-bottom: 0.3rem;">${e.date}</p>
+          <p style="font-size: 0.9rem;">${escHtml(e.content)}</p>
+        </div>`).join('')}` : ''}
+
+      <p style="margin-top: 2rem; text-align: center; font-size: 0.75rem; color: #6b7c74; border-top: 1px solid #d8e4dc; padding-top: 1rem;">FearFade — CBT-Based Phobia Support. For educational purposes only.</p>
+    </div>`;
+
+  const opt = {
+    margin: 0,
+    filename: 'fearfade-report.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  const element = document.createElement('div');
+  element.innerHTML = content;
+  document.body.appendChild(element);
+  html2pdf().set(opt).from(element).save().then(() => {
+    document.body.removeChild(element);
+    showToast('📄 PDF report generated!');
+  });
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* =============================================================
+   NEW FEATURE 5: BREATHING TIMER
+============================================================= */
+let breathingActive = false;
+let breathingTimeout = null;
+let breathingCycles = 0;
+let breathPhases = [
+  { name: 'Inhale', key: 'inhale', secs: 4, color: '#5a8a6a', scale: '1.12', desc: 'Breathe in slowly...' },
+  { name: 'Hold',   key: 'hold1',  secs: 4, color: '#4a6278', scale: '1.12', desc: 'Hold your breath...' },
+  { name: 'Exhale', key: 'exhale', secs: 4, color: '#3d6b4f', scale: '0.92', desc: 'Breathe out slowly...' },
+  { name: 'Hold',   key: 'hold2',  secs: 4, color: '#2f4455', scale: '0.92', desc: 'Hold before next breath...' }
+];
+let breathPhaseIdx = 0;
+let breathPhaseTime = 0;
+let breathAnimFrame = null;
+let breathLastTick = null;
+
+const CIRCUMFERENCE = 2 * Math.PI * 118; // ~741.42
+
+function applyPreset(preset) {
+  // Deactivate all preset buttons
+  ['box','478','555'].forEach(p => {
+    const btn = document.getElementById('preset-' + p);
+    if (btn) btn.classList.remove('active');
+  });
+  const btn = document.getElementById('preset-' + preset);
+  if (btn) btn.classList.add('active');
+
+  let phases;
+  if (preset === 'box') {
+    phases = [4, 4, 4, 4];
+  } else if (preset === '478') {
+    phases = [4, 7, 8, 0];
+  } else { // 555
+    phases = [5, 5, 5, 0];
+  }
+  ['inhale','hold1','exhale','hold2'].forEach((key, i) => {
+    const slider = document.getElementById('sl-' + key);
+    const valEl = document.getElementById('sl-' + key + '-val');
+    if (slider) { slider.value = phases[i]; valEl.textContent = phases[i]; }
+    breathPhases[i].secs = phases[i];
+  });
+  breathingReset();
+}
+
+function updateSlider(key, val) {
+  document.getElementById('sl-' + key + '-val').textContent = val;
+  const idx = { inhale: 0, hold1: 1, exhale: 2, hold2: 3 }[key];
+  if (idx !== undefined) breathPhases[idx].secs = parseInt(val);
+  // Deselect all presets since custom
+  ['box','478','555'].forEach(p => {
+    const btn = document.getElementById('preset-' + p);
+    if (btn) btn.classList.remove('active');
+  });
+  breathingReset();
+}
+
+function breathingStartStop() {
+  if (breathingActive) {
+    breathingStop();
+  } else {
+    breathingStart();
+  }
+}
+
+function breathingStart() {
+  breathingActive = true;
+  const btn = document.getElementById('breath-start-btn');
+  const icon = document.getElementById('breath-start-icon');
+  btn.innerHTML = '<i class="fas fa-stop" id="breath-start-icon"></i> Stop';
+  breathPhaseIdx = 0;
+  breathPhaseTime = 0;
+  breathLastTick = performance.now();
+  animateBreath();
+}
+
+function breathingStop() {
+  breathingActive = false;
+  if (breathAnimFrame) cancelAnimationFrame(breathAnimFrame);
+  const btn = document.getElementById('breath-start-btn');
+  btn.innerHTML = '<i class="fas fa-play" id="breath-start-icon"></i> Start';
+}
+
+function breathingReset() {
+  breathingStop();
+  breathCycles = 0;
+  document.getElementById('breath-phase').textContent = 'Ready';
+  document.getElementById('breath-num').textContent = '–';
+  document.getElementById('breath-desc').textContent = 'Press Start';
+  document.getElementById('breath-session-label').textContent = 'Session: 0 cycles';
+  document.getElementById('breath-inner').style.transform = 'scale(1)';
+  const prog = document.getElementById('breath-progress');
+  prog.style.strokeDashoffset = CIRCUMFERENCE;
+  prog.style.stroke = '#5a8a6a';
+}
+
+function animateBreath() {
+  if (!breathingActive) return;
+  const now = performance.now();
+  const delta = (now - breathLastTick) / 1000;
+  breathLastTick = now;
+  breathPhaseTime += delta;
+
+  // Skip phases with 0 duration
+  let phase = breathPhases[breathPhaseIdx];
+  while (phase.secs === 0) {
+    breathPhaseIdx = (breathPhaseIdx + 1) % breathPhases.length;
+    if (breathPhaseIdx === 0) breathCycles++;
+    phase = breathPhases[breathPhaseIdx];
+    breathPhaseTime = 0;
+  }
+
+  const phaseDur = phase.secs;
+  const remaining = Math.max(0, phaseDur - breathPhaseTime);
+  const progress = breathPhaseTime / phaseDur; // 0 to 1
+
+  // Update UI
+  document.getElementById('breath-phase').textContent = phase.name;
+  document.getElementById('breath-num').textContent = Math.ceil(remaining);
+  document.getElementById('breath-desc').textContent = phase.desc;
+
+  // Circle progress
+  const offset = CIRCUMFERENCE - (progress * CIRCUMFERENCE);
+  const prog = document.getElementById('breath-progress');
+  prog.style.strokeDashoffset = Math.max(0, offset);
+  prog.style.stroke = phase.color;
+
+  // Inner circle scale animation
+  document.getElementById('breath-inner').style.transform = `scale(${
+    phase.key === 'inhale' ? (1 + 0.12 * progress) :
+    phase.key === 'exhale' ? (1.12 - 0.2 * progress) :
+    parseFloat(phase.scale)
+  })`;
+
+  if (breathPhaseTime >= phaseDur) {
+    breathPhaseIdx = (breathPhaseIdx + 1) % breathPhases.length;
+    if (breathPhaseIdx === 0) {
+      breathCycles++;
+      document.getElementById('breath-session-label').textContent = `Session: ${breathCycles} cycle${breathCycles !== 1 ? 's' : ''}`;
+    }
+    breathPhaseTime = 0;
+  }
+
+  breathAnimFrame = requestAnimationFrame(animateBreath);
+}
+
+let breathCycles = 0;
+
+/* Tools tab switcher */
+function switchToolsTab(tab) {
+  ['relaxation','breathing'].forEach(t => {
+    document.getElementById('ttab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('tpanel-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab !== 'breathing' && breathingActive) breathingStop();
+}
+
+/* =============================================================
    INIT
 ============================================================= */
 document.addEventListener('DOMContentLoaded', () => {
+  applyStoredTheme();
   renderPhobiaGrid();
   renderLadder();
   renderJournal();
   renderPrograms();
   renderVideos();
+  renderStreakUI();
 });
 
 /* =============================================================
@@ -1113,7 +1739,7 @@ function checkStrength(pw){const box=document.getElementById('pw-strength');if(!
 function fe(code){return({'auth/invalid-email':'That email address is not valid.','auth/user-not-found':'No account found with that email.','auth/wrong-password':'Incorrect password. Please try again.','auth/invalid-credential':'Incorrect email or password.','auth/email-already-in-use':'An account with this email already exists — sign in instead.','auth/weak-password':'Password is too weak (6+ characters required).','auth/too-many-requests':'Too many failed attempts. Please wait a moment.','auth/network-request-failed':'Network error. Check your connection.','auth/popup-blocked':'Pop-up blocked. Please allow pop-ups for this site.','auth/unauthorized-domain':'This domain is not authorised for Google sign-in. Use email/password.'}[code])||'Something went wrong. Please try again.';}
 
 /* =============================================================
-   CLOUD SYNC
+   CLOUD SYNC — now includes streak data
 ============================================================= */
 async function syncAndLoad(uid) {
   try {
@@ -1123,7 +1749,8 @@ async function syncAndLoad(uid) {
       if (d.ladder && d.ladder.length) { ladder = d.ladder; localStorage.setItem('ff_ladder', JSON.stringify(ladder)); }
       if (d.journalEntries) { journalEntries = d.journalEntries; localStorage.setItem('ff_journal', JSON.stringify(journalEntries)); }
       if (d.programProgress) { for (const [k,v] of Object.entries(d.programProgress)) localStorage.setItem(k, JSON.stringify(v)); }
-      renderLadder(); renderJournal(); renderPrograms();
+      if (d.streakData) { localStorage.setItem('ff_streak', JSON.stringify(d.streakData)); }
+      renderLadder(); renderJournal(); renderPrograms(); renderStreakUI();
       showToast('☁️ Progress synced from cloud.');
     } else { await pushToCloud(uid); }
   } catch(e) { console.warn('Sync error:', e); }
@@ -1133,7 +1760,7 @@ async function pushToCloud(uid) {
   ['dogs','flying'].forEach(id => { const s = localStorage.getItem('ff_prog_'+id); if(s) prog['ff_prog_'+id] = JSON.parse(s); });
   try {
     await db.collection('users').doc(uid).set({
-      data: { ladder, journalEntries, programProgress: prog },
+      data: { ladder, journalEntries, programProgress: prog, streakData: loadStreakData() },
       lastUpdated: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
   } catch(e) { console.warn('Push error:', e); }
@@ -1154,6 +1781,13 @@ function renderPhobiaGrid() {
   document.getElementById('phobia-grid').innerHTML = PHOBIAS.map(p => {
     const stepCount = p.mediaSteps ? p.mediaSteps.length : 0;
     const mediaCount = p.mediaSteps ? p.mediaSteps.filter(s => s.mediaUrl).length : 0;
+    const audioHtml = p.audioUrl ? `
+      <div class="audio-on-card" onclick="event.stopPropagation()">
+        <div class="audio-on-card-label"><i class="fas fa-headphones"></i> Relaxation audio</div>
+        <audio controls preload="none" aria-label="${escHtml(p.audioTitle || 'Relaxation audio for ' + p.name)}">
+          <source src="${escHtml(p.audioUrl)}" type="audio/mpeg">
+        </audio>
+      </div>` : '';
     return `
     <div class="phobia-card" tabindex="0" role="button" aria-label="Learn about ${p.name}"
          onclick="openPhobiaModal('${p.id}')" onkeydown="if(event.key==='Enter'||event.key===' ')openPhobiaModal('${p.id}')">
@@ -1165,6 +1799,7 @@ function renderPhobiaGrid() {
         ${stepCount ? `<span class="badge"><i class="fas fa-stairs" style="margin-right:0.25rem;"></i>${stepCount} ladder steps</span>` : ''}
         ${mediaCount ? `<span class="media-count-pill"><i class="fas fa-film"></i> ${mediaCount} media</span>` : ''}
       </div>
+      ${audioHtml}
       <div class="card-action mt-1"><i class="fas fa-arrow-right"></i> Learn more &amp; start tools</div>
     </div>`;
   }).join('');
@@ -1189,10 +1824,7 @@ function openPhobiaModal(id) {
   document.getElementById('phobia-modal-content').innerHTML = `
     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
       <div style="font-size:2.5rem;">${p.icon}</div>
-      <div>
-        <h2 style="font-size:1.6rem;">${p.name}</h2>
-        <p class="text-sm text-muted" style="font-style:italic;">${p.scientific}</p>
-      </div>
+      <div><h2 style="font-size:1.6rem;">${p.name}</h2><p class="text-sm text-muted" style="font-style:italic;">${p.scientific}</p></div>
     </div>
     <p style="margin-bottom:1.25rem;">${p.description}</p>
     <h4 style="font-family:var(--font-body);font-weight:600;margin-bottom:0.75rem;">Common symptoms:</h4>
@@ -1204,12 +1836,11 @@ function openPhobiaModal(id) {
       </button>
       <button class="btn btn-secondary" onclick="closeModal('phobia-modal')">Close</button>
     </div>
-    <p class="text-sm text-muted mt-2">Loading the ladder will populate it with ${steps.length} suggested steps — you can edit, reorder, or remove any of them.</p>
+    <p class="text-sm text-muted mt-2">Loading the ladder will populate it with ${steps.length} suggested steps.</p>
   `;
   openModal('phobia-modal');
 }
 
-/* Load a phobia's mediaSteps into the ladder */
 function loadPhobiaLadder(phobiaId) {
   const p = PHOBIAS.find(x => x.id === phobiaId);
   if (!p || !p.mediaSteps) return;
@@ -1218,13 +1849,9 @@ function loadPhobiaLadder(phobiaId) {
   }
   ladder = p.mediaSteps.map((s, i) => ({
     id: Date.now().toString() + '_' + i,
-    desc: s.desc,
-    rating: s.rating,
-    completed: false,
-    mediaUrl: s.mediaUrl || null,
-    mediaType: s.mediaType || null,
-    mediaAlt: s.mediaAlt || s.desc,
-    mediaCaption: s.mediaCaption || s.desc
+    desc: s.desc, rating: s.rating, completed: false,
+    mediaUrl: s.mediaUrl || null, mediaType: s.mediaType || null,
+    mediaAlt: s.mediaAlt || s.desc, mediaCaption: s.mediaCaption || s.desc
   }));
   persistLadder();
   autoSync();
@@ -1239,35 +1866,26 @@ function loadPhobiaLadder(phobiaId) {
 function openMediaModal(rungId) {
   const rung = ladder.find(r => r.id === rungId);
   if (!rung || !rung.mediaUrl) return;
-
   document.getElementById('media-modal-title').textContent = rung.desc;
-
   let bodyHtml = '';
   if (rung.mediaType === 'video') {
-    // Ensure autoplay for YouTube embed
     const src = rung.mediaUrl.includes('?') ? rung.mediaUrl + '&autoplay=1' : rung.mediaUrl + '?autoplay=1';
     bodyHtml = `<div class="media-modal-video-wrap"><iframe src="${src}" allowfullscreen allow="autoplay; encrypted-media"></iframe></div>`;
   } else {
-    bodyHtml = `<div class="media-modal-image-wrap">
-      <img src="${escHtml(rung.mediaUrl)}" alt="${escHtml(rung.mediaAlt || rung.desc)}"
-           onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80';this.alt='Placeholder image';">
-    </div>`;
+    bodyHtml = `<div class="media-modal-image-wrap"><img src="${escHtml(rung.mediaUrl)}" alt="${escHtml(rung.mediaAlt || rung.desc)}" onerror="this.src='https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&q=80';"></div>`;
   }
   document.getElementById('media-modal-body').innerHTML = bodyHtml;
-
   const caption = rung.mediaCaption || rung.mediaAlt || rung.desc;
   document.getElementById('media-modal-caption').innerHTML = `
     <strong>Exposure step:</strong> ${escHtml(rung.desc)}<br>
     <span style="margin-top:0.25rem;display:block;">${escHtml(caption)}</span>
     <span style="margin-top:0.5rem;display:block;font-size:0.82rem;color:var(--sage-dark);">
-      <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Stay with this media until you notice your anxiety starting to reduce. Don't close it too soon.
+      <i class="fas fa-lightbulb"></i> <strong>Tip:</strong> Stay with this media until you notice your anxiety starting to reduce.
     </span>`;
-
   openModal('media-modal');
 }
 
 function closeMediaModal() {
-  // Stop video by clearing the iframe src before closing
   const body = document.getElementById('media-modal-body');
   const iframe = body.querySelector('iframe');
   if (iframe) iframe.src = '';
@@ -1277,29 +1895,20 @@ function closeMediaModal() {
 /* =============================================================
    FEAR LADDER — CORE
 ============================================================= */
-function ratingClass(r) {
-  return r <= 3 ? 'rating-easy' : r <= 6 ? 'rating-medium' : 'rating-hard';
-}
-function ratingEmoji(r) {
-  return r <= 3 ? '🟢' : r <= 6 ? '🟡' : '🔴';
-}
+function ratingClass(r) { return r <= 3 ? 'rating-easy' : r <= 6 ? 'rating-medium' : 'rating-hard'; }
+function ratingEmoji(r) { return r <= 3 ? '🟢' : r <= 6 ? '🟡' : '🔴'; }
 
 function buildRungEl(rung) {
   const el = document.createElement('div');
   el.className = 'ladder-rung' + (rung.completed ? ' completed' : '');
   el.dataset.id = rung.id;
-
   const hasMedia = !!(rung.mediaUrl);
   const isVideo = rung.mediaType === 'video';
   const mediaBtn = hasMedia
     ? `<button class="rung-media-badge ${isVideo ? 'video-badge' : ''}"
-         onclick="openMediaModal('${rung.id}')" title="View exposure media"
-         aria-label="Open exposure media for this step">
-         <i class="fas fa-${isVideo ? 'play-circle' : 'image'}"></i>
-         ${isVideo ? 'Watch' : 'View'} media
-       </button>`
-    : '';
-
+         onclick="openMediaModal('${rung.id}')" title="View exposure media" aria-label="Open exposure media">
+         <i class="fas fa-${isVideo ? 'play-circle' : 'image'}"></i> ${isVideo ? 'Watch' : 'View'} media
+       </button>` : '';
   el.innerHTML = `
     <div class="rung-grip" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></div>
     <div class="rung-check-wrap">
@@ -1312,8 +1921,7 @@ function buildRungEl(rung) {
     </div>
     <div class="rung-body">
       <div class="rung-desc" id="rdesc-${rung.id}">${escHtml(rung.desc)}</div>
-      <input class="rung-desc-edit" type="text" id="redit-${rung.id}"
-             value="${escHtml(rung.desc)}" maxlength="140"
+      <input class="rung-desc-edit" type="text" id="redit-${rung.id}" value="${escHtml(rung.desc)}" maxlength="140"
              onkeydown="if(event.key==='Enter')saveEditRung('${rung.id}');if(event.key==='Escape')cancelEditRung('${rung.id}')">
       <div class="rung-sub" id="rsub-${rung.id}">
         <span class="rung-rating ${ratingClass(rung.rating)}">${rung.rating} ${ratingEmoji(rung.rating)}</span>
@@ -1329,19 +1937,16 @@ function buildRungEl(rung) {
       </div>
     </div>
     <div class="rung-actions">
-      <button class="btn-edit-sm" onclick="startEditRung('${rung.id}')" aria-label="Edit" title="Edit"><i class="fas fa-pencil"></i></button>
-      <button class="btn-danger-sm" onclick="deleteRung('${rung.id}')" aria-label="Delete" title="Delete"><i class="fas fa-trash"></i></button>
-    </div>
-  `;
+      <button class="btn-edit-sm" onclick="startEditRung('${rung.id}')" aria-label="Edit"><i class="fas fa-pencil"></i></button>
+      <button class="btn-danger-sm" onclick="deleteRung('${rung.id}')" aria-label="Delete"><i class="fas fa-trash"></i></button>
+    </div>`;
   return el;
 }
 
 function initSortable(listEl) {
   if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
   sortableInstance = Sortable.create(listEl, {
-    animation: 180,
-    handle: '.rung-grip',
-    ghostClass: 'is-dragging',
+    animation: 180, handle: '.rung-grip', ghostClass: 'is-dragging',
     onEnd: () => {
       const newOrder = [];
       listEl.querySelectorAll('.ladder-rung').forEach(el => {
@@ -1360,11 +1965,7 @@ function renderLadder() {
   const emptyEl = document.getElementById('ladder-empty');
   if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
   listEl.innerHTML = '';
-  if (!ladder.length) {
-    emptyEl.style.display = 'block';
-    updateLadderProgress();
-    return;
-  }
+  if (!ladder.length) { emptyEl.style.display = 'block'; updateLadderProgress(); return; }
   emptyEl.style.display = 'none';
   ladder.forEach(rung => listEl.appendChild(buildRungEl(rung)));
   initSortable(listEl);
@@ -1408,9 +2009,15 @@ function toggleRung(id) {
   const rung = ladder.find(r => r.id === id);
   if (!rung) return;
   rung.completed = !rung.completed;
+  if (rung.completed) rung.completedDate = new Date().toLocaleDateString('en-IN');
   persistLadder();
   autoSync();
-  if (rung.completed) showToast('🎉 Rung completed! Well done — keep climbing!');
+  // NEW: Record activity and check badges on rung completion
+  if (rung.completed) {
+    recordActivity();
+    checkBadges();
+    showToast('🎉 Rung completed! Well done — keep climbing!');
+  }
   const el = document.querySelector(`.ladder-rung[data-id="${id}"]`);
   if (!el) { renderLadder(); return; }
   el.classList.toggle('completed', rung.completed);
@@ -1421,14 +2028,11 @@ function toggleRung(id) {
   const descEl = el.querySelector('.rung-desc');
   descEl.style.textDecoration = rung.completed ? 'line-through' : '';
   descEl.style.color = rung.completed ? 'var(--text-muted)' : '';
-  // Rebuild sub row preserving media button
-  const hasMedia = !!(rung.mediaUrl);
-  const isVideo = rung.mediaType === 'video';
+  const hasMedia = !!(rung.mediaUrl); const isVideo = rung.mediaType === 'video';
   const mediaBtn = hasMedia
     ? `<button class="rung-media-badge ${isVideo ? 'video-badge' : ''}"
          onclick="openMediaModal('${rung.id}')" title="View exposure media">
-         <i class="fas fa-${isVideo ? 'play-circle' : 'image'}"></i>
-         ${isVideo ? 'Watch' : 'View'} media
+         <i class="fas fa-${isVideo ? 'play-circle' : 'image'}"></i> ${isVideo ? 'Watch' : 'View'} media
        </button>` : '';
   el.querySelector(`#rsub-${id}`).innerHTML = `
     <span class="rung-rating ${ratingClass(rung.rating)}">${rung.rating} ${ratingEmoji(rung.rating)}</span>
@@ -1439,50 +2043,39 @@ function toggleRung(id) {
 
 function deleteRung(id) {
   ladder = ladder.filter(r => r.id !== id);
-  persistLadder();
-  autoSync();
+  persistLadder(); autoSync();
   const el = document.querySelector(`.ladder-rung[data-id="${id}"]`);
   if (el) {
     el.style.transition = 'opacity 0.2s, transform 0.2s';
-    el.style.opacity = '0';
-    el.style.transform = 'translateX(-12px)';
+    el.style.opacity = '0'; el.style.transform = 'translateX(-12px)';
     setTimeout(() => { el.remove(); if (!ladder.length) document.getElementById('ladder-empty').style.display = 'block'; updateLadderProgress(); }, 220);
   }
   showToast('🗑️ Rung removed.');
 }
 
 function startEditRung(id) {
-  const el = document.querySelector(`.ladder-rung[data-id="${id}"]`);
-  if (!el) return;
+  const el = document.querySelector(`.ladder-rung[data-id="${id}"]`); if (!el) return;
   el.querySelector('.rung-desc').style.display = 'none';
   el.querySelector(`#rsub-${id}`).style.display = 'none';
   const editInput = el.querySelector(`#redit-${id}`);
   const editRow = el.querySelector(`#redit-row-${id}`);
-  editInput.style.display = 'block';
-  editRow.style.display = 'flex';
-  editInput.focus();
-  editInput.select();
+  editInput.style.display = 'block'; editRow.style.display = 'flex';
+  editInput.focus(); editInput.select();
 }
 function saveEditRung(id) {
-  const el = document.querySelector(`.ladder-rung[data-id="${id}"]`);
-  if (!el) return;
-  const rung = ladder.find(r => r.id === id);
-  if (!rung) return;
+  const el = document.querySelector(`.ladder-rung[data-id="${id}"]`); if (!el) return;
+  const rung = ladder.find(r => r.id === id); if (!rung) return;
   const newDesc = el.querySelector(`#redit-${id}`).value.trim();
   const newRating = parseInt(el.querySelector(`#redit-row-${id} input[type="range"]`).value);
   if (!newDesc) { showToast('⚠️ Description cannot be empty.'); return; }
-  rung.desc = newDesc;
-  rung.rating = newRating;
-  persistLadder();
-  autoSync();
+  rung.desc = newDesc; rung.rating = newRating;
+  persistLadder(); autoSync();
   el.querySelector('.rung-desc').textContent = newDesc;
-  const hasMedia = !!(rung.mediaUrl);
-  const isVideo = rung.mediaType === 'video';
+  const hasMedia = !!(rung.mediaUrl); const isVideo = rung.mediaType === 'video';
   const mediaBtn = hasMedia
     ? `<button class="rung-media-badge ${isVideo ? 'video-badge' : ''}"
          onclick="openMediaModal('${rung.id}')" title="View exposure media">
-         <i class="fas fa-${isVideo ? 'play-circle' : 'image'}"></i>
-         ${isVideo ? 'Watch' : 'View'} media
+         <i class="fas fa-${isVideo ? 'play-circle' : 'image'}"></i> ${isVideo ? 'Watch' : 'View'} media
        </button>` : '';
   el.querySelector(`#rsub-${id}`).innerHTML = `
     <span class="rung-rating ${ratingClass(newRating)}">${newRating} ${ratingEmoji(newRating)}</span>
@@ -1492,8 +2085,7 @@ function saveEditRung(id) {
   showToast('✏️ Rung updated!');
 }
 function cancelEditRung(id) {
-  const el = document.querySelector(`.ladder-rung[data-id="${id}"]`);
-  if (!el) return;
+  const el = document.querySelector(`.ladder-rung[data-id="${id}"]`); if (!el) return;
   el.querySelector('.rung-desc').style.display = '';
   el.querySelector(`#rsub-${id}`).style.display = '';
   el.querySelector(`#redit-${id}`).style.display = 'none';
@@ -1508,7 +2100,7 @@ function clearLadder() {
 function persistLadder() { localStorage.setItem('ff_ladder', JSON.stringify(ladder)); }
 
 /* =============================================================
-   JOURNAL
+   JOURNAL — records activity for streak
 ============================================================= */
 function saveJournalEntry() {
   const text = document.getElementById('journal-input').value.trim();
@@ -1518,6 +2110,9 @@ function saveJournalEntry() {
   document.getElementById('journal-input').value = '';
   renderJournal();
   showToast('📔 Journal entry saved!');
+  // NEW: Record activity for streak, check chronicler badge
+  recordActivity();
+  checkBadges();
   autoSync();
 }
 function renderJournal() {
@@ -1575,7 +2170,9 @@ function togDay(progId,dayId){
   localStorage.setItem('ff_prog_'+progId,JSON.stringify(done));
   const el=document.getElementById('dc-'+dayId);
   if(el){const d=done.includes(dayId);el.className='day-check'+(d?' done':'');el.setAttribute('aria-checked',d);el.innerHTML=d?'<i class="fas fa-check"></i>':'';}
-  renderPrograms();autoSync();
+  renderPrograms();
+  recordActivity();
+  autoSync();
 }
 
 /* =============================================================
