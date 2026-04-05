@@ -71,6 +71,12 @@ body.dark-mode {
   --slate-light: #1a2530;
   --slate-dark: #9bbdd1;
   --dark: #e8f2ec;
+
+  /* Fix professional section in dark mode */
+  #professional {
+    background: var(--bg-page);   /* dark background, consistent with page */
+    color: rgba(255, 255, 255, 0.9);
+  }
 }
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
