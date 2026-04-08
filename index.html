@@ -8,7 +8,6 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
-<!-- html2pdf for PDF export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -43,7 +42,6 @@ const db = firebase.firestore();
   --transition:0.22s cubic-bezier(0.4,0,0.2,1);
   --font-display:'DM Serif Display',Georgia,serif;
   --font-body:'DM Sans',system-ui,sans-serif;
-  /* NEW: card/bg for dark mode override */
   --bg-page: var(--cream);
   --bg-card: var(--white);
   --bg-sand: var(--sand);
@@ -53,7 +51,6 @@ const db = firebase.firestore();
 }
 
 /* ===================== DARK MODE ===================== */
-/* NEW FEATURE 4: Dark mode colour overrides */
 body.dark-mode {
   --bg-page: #141d17;
   --bg-card: #1e2d24;
@@ -71,13 +68,70 @@ body.dark-mode {
   --slate-light: #1a2530;
   --slate-dark: #9bbdd1;
   --dark: #e8f2ec;
-
-  /* Fix professional section in dark mode */
-  #professional {
-    background: var(--bg-page);   /* dark background, consistent with page */
-    color: rgba(255, 255, 255, 0.9);
-  }
 }
+body.dark-mode #professional {
+  background: var(--bg-page);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* ===================== AUTH GATE ===================== */
+/*
+  Protected sections are hidden by default.
+  They become visible only when <body> has .user-authenticated.
+  This prevents any flash of content before the auth state resolves.
+*/
+.protected-section {
+  display: none !important;
+}
+body.user-authenticated .protected-section {
+  display: block !important;
+}
+
+/* Protected nav links: hidden until authenticated */
+.protected-nav-link {
+  display: none !important;
+}
+body.user-authenticated .protected-nav-link {
+  display: block !important;  /* inline-block for li, but 'block' works inside flex */
+}
+/* The nav-links li items need list-item display, override gracefully */
+body.user-authenticated li.protected-nav-link {
+  display: list-item !important;
+}
+
+/* Sign-in prompt banner shown on hero when NOT authenticated */
+.signin-prompt-banner {
+  display: none;
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, var(--sage-light), var(--slate-light));
+  border: 1.5px solid var(--sage);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.4rem;
+  max-width: 520px;
+  animation: fadeInUp 0.5s 0.3s ease both;
+}
+body:not(.user-authenticated) .signin-prompt-banner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.signin-prompt-banner i {
+  color: var(--sage-dark);
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.signin-prompt-banner p {
+  font-size: 0.9rem;
+  color: var(--text);
+  margin: 0;
+  flex: 1;
+}
+.signin-prompt-banner p strong {
+  color: var(--sage-dark);
+}
+
+/* ===================== END AUTH GATE ===================== */
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;font-size:16px;}
@@ -151,12 +205,18 @@ body.dark-mode #site-header{background:rgba(20,29,23,0.92);}
 .mobile-nav a:hover{background:var(--sage-light);color:var(--sage-dark);}
 .mobile-nav.open{display:flex;}
 
-/* NEW: Dark mode toggle button */
+/* Mobile protected nav links */
+.mobile-protected-link {
+  display: none !important;
+}
+body.user-authenticated .mobile-protected-link {
+  display: block !important;
+}
+
 #dark-toggle{width:38px;height:38px;border-radius:50%;background:var(--sage-light);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--sage-dark);font-size:1rem;transition:all var(--transition);flex-shrink:0;}
 #dark-toggle:hover{background:var(--sage);color:#fff;transform:rotate(15deg);}
 
 /* =================== HERO =================== */
-/* NEW FEATURE 1: Hero with slow pulse animation */
 #home{background:linear-gradient(160deg,var(--sage-light) 0%,var(--cream) 55%,var(--sand) 100%);padding:6rem 0 5rem;position:relative;overflow:hidden;}
 #home::before{content:'';position:absolute;top:-60px;right:-80px;width:480px;height:480px;border-radius:50%;background:radial-gradient(circle,rgba(90,138,106,0.12) 0%,transparent 70%);pointer-events:none;animation:hero-pulse 8s ease-in-out infinite;}
 #home::after{content:'';position:absolute;bottom:-40px;left:-60px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(74,98,120,0.08) 0%,transparent 70%);pointer-events:none;animation:hero-pulse 10s 2s ease-in-out infinite;}
@@ -166,12 +226,10 @@ body.dark-mode #site-header{background:rgba(20,29,23,0.92);}
 .hero-content h1{font-size:clamp(2.2rem,5vw,3.4rem);margin-bottom:1.1rem;}
 .hero-content h1 em{font-style:italic;color:var(--sage);}
 .hero-content p{font-size:1.08rem;color:var(--text-muted);margin-bottom:1rem;max-width:520px;}
-/* NEW FEATURE 1: Sub-heading below paragraph */
 .hero-subline{font-size:0.95rem;font-weight:600;color:var(--sage-dark);margin-bottom:1.75rem;display:flex;align-items:center;gap:0.5rem;}
 .hero-trust{font-size:0.82rem;color:var(--text-muted);margin-top:0.85rem;display:flex;align-items:center;gap:0.4rem;}
 .hero-trust i{color:var(--sage);}
 .hero-actions{display:flex;gap:1rem;flex-wrap:wrap;}
-/* NEW FEATURE 1: Two simplified stats */
 .hero-stats{display:flex;gap:2.5rem;margin-top:3.5rem;flex-wrap:wrap;}
 .hero-stat strong{display:block;font-family:var(--font-display);font-size:2rem;color:var(--dark);}
 .hero-stat span{font-size:0.82rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;}
@@ -189,13 +247,11 @@ body.dark-mode #site-header{background:rgba(20,29,23,0.92);}
 .phobia-card p{font-size:0.88rem;color:var(--text-muted);line-height:1.55;}
 .phobia-card .card-action{display:inline-flex;align-items:center;gap:0.3rem;margin-top:1rem;font-size:0.82rem;font-weight:600;color:var(--sage);}
 
-/* =================== AUDIO ON CARD =================== */
 .audio-on-card{margin-top:0.75rem;border-top:1px solid var(--border);padding-top:0.65rem;}
 .audio-on-card-label{display:flex;align-items:center;gap:0.35rem;font-size:0.75rem;font-weight:600;color:var(--sage-dark);margin-bottom:0.4rem;}
 .audio-on-card audio{width:100%;height:32px;border-radius:99px;display:block;accent-color:var(--sage);}
 .audio-on-card{position:relative;z-index:2;}
 
-/* =================== SECTION HEADERS =================== */
 .section-header{max-width:600px;margin-bottom:3rem;}
 .section-header .tag{margin-bottom:1rem;}
 .section-header h2{font-size:clamp(1.8rem,4vw,2.6rem);margin-bottom:0.85rem;}
@@ -204,70 +260,56 @@ body.dark-mode #site-header{background:rgba(20,29,23,0.92);}
 /* =================== FEAR LADDER =================== */
 .ladder-layout{display:grid;grid-template-columns:1fr 340px;gap:2rem;align-items:start;}
 @media(max-width:900px){.ladder-layout{grid-template-columns:1fr;}}
-
 .ladder-progress-wrap{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.25rem 1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow-sm);}
 .ladder-progress-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;gap:1rem;flex-wrap:wrap;}
 .ladder-progress-title{font-weight:600;font-size:1rem;}
 .ladder-progress-label{font-size:0.85rem;color:var(--text-muted);white-space:nowrap;}
 .ladder-progress-bar-outer{background:var(--sand);border-radius:99px;height:10px;overflow:hidden;flex:1;min-width:100px;}
 .ladder-progress-bar-inner{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--sage),var(--sage-dark));transition:width 0.45s ease;}
-
 .ladder-column{position:relative;}
 .ladder-spine{position:relative;}
 .ladder-spine::before{content:'';position:absolute;left:28px;top:0;bottom:0;width:2px;background:linear-gradient(to bottom,var(--sage-light),var(--border));border-radius:1px;z-index:0;}
-
 .ladder-rung{display:flex;align-items:flex-start;gap:0.7rem;background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-md);padding:0.9rem 1rem 0.9rem 0.75rem;margin-bottom:0.7rem;position:relative;z-index:1;transition:border-color var(--transition),box-shadow var(--transition),opacity var(--transition),background var(--transition);cursor:default;}
 .ladder-rung:hover{border-color:var(--sage);box-shadow:var(--shadow-sm);}
 .ladder-rung.is-dragging{opacity:0.55;box-shadow:var(--shadow-md);}
 .ladder-rung.completed{background:#f6faf7;border-color:var(--sage);opacity:0.82;}
 body.dark-mode .ladder-rung.completed{background:#1f3329;}
 .ladder-rung.completed .rung-desc{text-decoration:line-through;color:var(--text-muted);}
-
 .rung-media-badge{display:inline-flex;align-items:center;gap:0.25rem;font-size:0.75rem;font-weight:600;color:var(--slate-dark);background:var(--slate-light);border-radius:99px;padding:0.18rem 0.55rem;margin-top:0.3rem;cursor:pointer;transition:all var(--transition);border:none;}
 .rung-media-badge:hover{background:var(--slate);color:#fff;}
 .rung-media-badge.video-badge{color:#8B4513;background:#fff3e0;}
 .rung-media-badge.video-badge:hover{background:#e67e22;color:#fff;}
-
 .rung-grip{flex-shrink:0;cursor:grab;color:#c5d8cc;font-size:1.05rem;padding:2px 4px;margin-top:2px;transition:color var(--transition);user-select:none;touch-action:none;}
 .rung-grip:hover{color:var(--sage);}
 .rung-grip:active{cursor:grabbing;}
-
 .rung-check-wrap{flex-shrink:0;margin-top:2px;}
 .rung-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all var(--transition);}
 .rung-check.done{background:var(--sage);border-color:var(--sage);color:#fff;}
 .rung-check i{font-size:0.62rem;}
-
 .rung-body{flex:1;min-width:0;}
 .rung-desc{font-size:0.93rem;font-weight:500;word-break:break-word;line-height:1.45;}
 .rung-desc-edit{display:none;width:100%;margin-top:0.3rem;}
 .rung-sub{display:flex;align-items:center;gap:0.5rem;margin-top:0.35rem;flex-wrap:wrap;}
-
 .rung-rating{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:99px;font-size:0.78rem;font-weight:700;color:#fff;padding:0 0.5rem;flex-shrink:0;}
 .rating-easy{background:#27ae60;}
 .rating-medium{background:#e67e22;}
 .rating-hard{background:#c0392b;}
-
 .rung-edit-row{display:none;gap:0.5rem;align-items:center;margin-top:0.5rem;flex-wrap:wrap;}
 .rung-edit-row input[type="range"]{flex:1;min-width:80px;}
 .rung-edit-row label{white-space:nowrap;margin-bottom:0;}
-
 .rung-actions{display:flex;align-items:center;gap:0;flex-shrink:0;margin-top:0;}
-
 .ladder-empty{text-align:center;padding:2.5rem 1.5rem;background:var(--white);border:2px dashed var(--border);border-radius:var(--radius-lg);}
 .ladder-empty i{font-size:2.5rem;color:var(--border);margin-bottom:0.75rem;display:block;}
 .ladder-empty p{color:var(--text-muted);font-size:0.95rem;}
-
 .add-rung-form{background:var(--sand);border-radius:var(--radius-md);padding:1.25rem;margin-top:0.5rem;}
 .add-rung-form h4{font-family:var(--font-body);font-size:0.9rem;font-weight:600;margin-bottom:0.85rem;color:var(--text);}
 .add-rung-row{display:flex;gap:0.75rem;align-items:flex-end;flex-wrap:wrap;}
 .add-rung-row>div{flex:1;min-width:150px;}
 .add-rung-rating-val{font-weight:700;color:var(--sage-dark);display:inline-block;min-width:20px;}
 .add-rung-actions{display:flex;gap:0.75rem;margin-top:0.85rem;flex-wrap:wrap;}
-
 .ladder-complete-msg{display:none;background:var(--sage-light);border:1.5px solid var(--sage);border-radius:var(--radius-md);padding:1.25rem 1.5rem;text-align:center;margin-bottom:1rem;}
 .ladder-complete-msg.show{display:block;}
 .ladder-complete-msg p{color:var(--sage-dark);font-weight:500;}
-
 .ladder-sidebar{display:flex;flex-direction:column;gap:1.25rem;}
 .sidebar-card{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem;box-shadow:var(--shadow-sm);}
 .sidebar-card h4{font-family:var(--font-body);font-weight:600;font-size:0.95rem;margin-bottom:0.85rem;color:var(--dark);}
@@ -281,7 +323,7 @@ body.dark-mode .ladder-rung.completed{background:#1f3329;}
 .journal-entry .date{font-size:0.8rem;color:var(--text-muted);margin-bottom:0.35rem;}
 .journal-entry .content{font-size:0.92rem;}
 
-/* =================== NEW FEATURE 2: STREAK & ACHIEVEMENTS =================== */
+/* =================== STREAK & ACHIEVEMENTS =================== */
 .streak-row{display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1rem;background:linear-gradient(135deg,#fff8e1,#fff3cd);border-radius:var(--radius-md);border:1px solid #f9c74f;margin-bottom:0.75rem;}
 body.dark-mode .streak-row{background:linear-gradient(135deg,#2a2310,#1e1a0c);border-color:#5a4a10;}
 .streak-flame{font-size:1.6rem;line-height:1;}
@@ -294,16 +336,13 @@ body.dark-mode .streak-row{background:linear-gradient(135deg,#2a2310,#1e1a0c);bo
 .badge-pill.earned{background:linear-gradient(135deg,#fef3c7,#fde68a);border-color:#f9c74f;color:#92400e;}
 body.dark-mode .badge-pill.earned{background:linear-gradient(135deg,#3d2e08,#2a2010);border-color:#7a5e1a;color:#fcd34d;}
 
-/* =================== NEW FEATURE 3: EXPORT MODAL =================== */
+/* =================== EXPORT =================== */
 .export-dropdown{background:var(--white);border:1.5px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-md);padding:0.5rem;min-width:240px;}
 .export-option{display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;border-radius:var(--radius-sm);cursor:pointer;transition:background var(--transition);border:none;background:none;width:100%;color:var(--text);font-size:0.9rem;font-weight:500;text-align:left;}
 .export-option:hover{background:var(--sage-light);color:var(--sage-dark);}
 .export-option i{width:20px;text-align:center;color:var(--sage);}
-.export-modal-overlay{position:fixed;inset:0;z-index:1100;display:none;align-items:center;justify-content:center;padding:1.5rem;}
-.export-modal-overlay.open{display:flex;}
 
-/* =================== NEW FEATURE 5: SELF-HELP TOOLS / BREATHING TIMER =================== */
-/* The tools section appended to the page */
+/* =================== SELF-HELP TOOLS =================== */
 #tools-section{background:var(--sand);padding:5rem 0;}
 .tools-tab-strip{display:flex;gap:0;border-radius:var(--radius-md);background:var(--white);border:1.5px solid var(--border);overflow:hidden;margin-bottom:2rem;width:fit-content;}
 .tools-tab-btn{padding:0.7rem 1.5rem;font-size:0.9rem;font-weight:500;background:none;border:none;cursor:pointer;color:var(--text-muted);border-right:1px solid var(--border);transition:all var(--transition);}
@@ -312,8 +351,6 @@ body.dark-mode .badge-pill.earned{background:linear-gradient(135deg,#3d2e08,#2a2
 .tools-tab-btn:hover:not(.active){background:var(--sage-light);color:var(--sage-dark);}
 .tools-panel{display:none;}
 .tools-panel.active{display:block;}
-
-/* Breathing timer specific styles */
 .breathing-layout{display:grid;grid-template-columns:1fr 320px;gap:2.5rem;align-items:center;}
 @media(max-width:800px){.breathing-layout{grid-template-columns:1fr;}}
 .breathing-circle-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem 0;}
@@ -325,7 +362,6 @@ body.dark-mode .badge-pill.earned{background:linear-gradient(135deg,#3d2e08,#2a2
 .breathing-timer-num{font-size:2.5rem;font-weight:700;color:var(--dark);font-family:var(--font-display);}
 .breathing-desc{font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;}
 .breathing-controls{display:flex;gap:0.75rem;margin-top:2rem;flex-wrap:wrap;justify-content:center;}
-
 .breathing-settings{background:var(--white);border-radius:var(--radius-lg);border:1px solid var(--border);padding:1.5rem;box-shadow:var(--shadow-sm);}
 .breathing-settings h4{font-family:var(--font-body);font-weight:600;font-size:0.95rem;margin-bottom:1rem;color:var(--dark);}
 .preset-btns{display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem;}
@@ -335,8 +371,6 @@ body.dark-mode .badge-pill.earned{background:linear-gradient(135deg,#3d2e08,#2a2
 .phase-slider-group{margin-bottom:1rem;}
 .phase-slider-group label{font-size:0.82rem;font-weight:600;color:var(--text-muted);margin-bottom:0.25rem;display:flex;justify-content:space-between;}
 .phase-slider-group label span{color:var(--sage-dark);font-weight:700;}
-
-/* Relaxation tab content (panic techniques reused) */
 .relaxation-techniques{display:flex;flex-direction:column;gap:1rem;}
 .relaxation-technique{background:var(--white);border-radius:var(--radius-md);padding:1.25rem;border-left:3px solid var(--sage);}
 .relaxation-technique h4{font-family:var(--font-body);font-size:0.95rem;font-weight:600;margin-bottom:0.35rem;}
@@ -399,8 +433,6 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
 .modal-symptom-list{list-style:none;padding:0;}
 .modal-symptom-list li{display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0;border-bottom:1px solid var(--border);font-size:0.9rem;}
 .modal-symptom-list li i{color:var(--sage);font-size:0.75rem;}
-
-/* Media lightbox */
 .media-modal-box{background:var(--white);border-radius:var(--radius-xl);max-width:780px;width:100%;position:relative;box-shadow:var(--shadow-lg);overflow:hidden;}
 .media-modal-header{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:1rem;}
 .media-modal-title{font-family:var(--font-body);font-weight:600;font-size:0.95rem;color:var(--dark);flex:1;}
@@ -412,14 +444,11 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
 .media-modal-caption{padding:1.25rem 1.5rem;background:var(--sand);font-size:0.88rem;color:var(--text-muted);border-top:1px solid var(--border);}
 .media-modal-caption strong{color:var(--dark);}
 .media-modal-footer{padding:1rem 1.5rem;display:flex;gap:0.75rem;justify-content:flex-end;border-top:1px solid var(--border);}
-
 .media-count-pill{display:inline-flex;align-items:center;gap:0.3rem;background:var(--slate-light);color:var(--slate-dark);border-radius:99px;padding:0.2rem 0.65rem;font-size:0.78rem;font-weight:600;}
 .suggested-steps-list{list-style:none;padding:0;margin:0.75rem 0;}
 .suggested-step-item{display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.75rem;border-radius:var(--radius-sm);background:var(--sand);margin-bottom:0.4rem;font-size:0.88rem;}
 .suggested-step-item .step-rating{flex-shrink:0;min-width:24px;height:24px;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:700;color:#fff;padding:0 0.4rem;}
 .suggested-step-item .step-has-media{margin-left:auto;flex-shrink:0;font-size:0.75rem;color:var(--slate);display:flex;align-items:center;gap:0.2rem;}
-
-/* Auth modal */
 .auth-modal-box{background:var(--white);border-radius:var(--radius-xl);max-width:460px;width:100%;position:relative;box-shadow:var(--shadow-lg);overflow:hidden;}
 .auth-header{padding:2rem 2rem 1.5rem;background:linear-gradient(135deg,var(--sage-light) 0%,var(--slate-light) 100%);text-align:center;}
 .auth-header-icon{font-size:2.8rem;margin-bottom:0.5rem;}
@@ -451,8 +480,6 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
 .auth-note{text-align:center;font-size:0.8rem;color:var(--text-muted);margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);}
 .spin{display:inline-block;width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;animation:spin360 0.7s linear infinite;vertical-align:middle;}
 @keyframes spin360{to{transform:rotate(360deg);}}
-
-/* Panic */
 #panic-btn{position:fixed;bottom:1.75rem;right:1.75rem;z-index:500;width:56px;height:56px;border-radius:50%;background:var(--sage);color:#fff;border:none;box-shadow:0 4px 20px rgba(90,138,106,0.4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;transition:all var(--transition);animation:pulse-ring 2.5s ease infinite;}
 #panic-btn:hover{background:var(--sage-dark);transform:scale(1.08);}
 .panic-tooltip{position:absolute;right:calc(100% + 0.75rem);top:50%;transform:translateY(-50%);background:var(--dark);color:#fff;font-size:0.78rem;font-weight:500;padding:0.35rem 0.75rem;border-radius:99px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity var(--transition);}
@@ -465,10 +492,8 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
 .panic-technique{background:var(--sand);border-radius:var(--radius-md);padding:1.25rem;border-left:3px solid var(--sage);}
 .panic-technique h4{font-family:var(--font-body);font-size:0.95rem;font-weight:600;margin-bottom:0.35rem;}
 .panic-technique p{font-size:0.88rem;color:var(--text-muted);}
-
 #toast{position:fixed;bottom:5.5rem;right:1.75rem;z-index:600;background:var(--dark);color:#fff;padding:0.75rem 1.25rem;border-radius:var(--radius-md);font-size:0.88rem;box-shadow:var(--shadow-md);transform:translateY(10px);opacity:0;transition:all 0.3s ease;pointer-events:none;}
 #toast.show{transform:translateY(0);opacity:1;}
-
 @keyframes fadeInUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
 .fade-in{animation:fadeInUp 0.5s ease both;}
 .fade-in-2{animation:fadeInUp 0.5s 0.1s ease both;}
@@ -497,15 +522,15 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
     <a href="#home" class="logo" aria-label="FearFade Home"><span class="logo-dot"></span> FearFade</a>
     <ul class="nav-links" role="list">
       <li><a href="#home" class="active" onclick="setActive(this)">Home</a></li>
-      <li><a href="#library" onclick="setActive(this)">Phobia Library</a></li>
-      <li><a href="#selfhelp" onclick="setActive(this)">Fear Ladder</a></li>
-      <li><a href="#programs" onclick="setActive(this)">Guided Programs</a></li>
-      <li><a href="#tools-section" onclick="setActive(this)">Self-Help Tools</a></li>
-      <li><a href="#videos" onclick="setActive(this)">Videos</a></li>
-      <li><a href="#professional" onclick="setActive(this)">Professional Help</a></li>
+      <!-- Protected nav links: only visible when .user-authenticated is on body -->
+      <li class="protected-nav-link"><a href="#library" onclick="setActive(this)">Phobia Library</a></li>
+      <li class="protected-nav-link"><a href="#selfhelp" onclick="setActive(this)">Fear Ladder</a></li>
+      <li class="protected-nav-link"><a href="#programs" onclick="setActive(this)">Guided Programs</a></li>
+      <li class="protected-nav-link"><a href="#tools-section" onclick="setActive(this)">Self-Help Tools</a></li>
+      <li class="protected-nav-link"><a href="#videos" onclick="setActive(this)">VR Videos</a></li>
+      <li class="protected-nav-link"><a href="#professional" onclick="setActive(this)">Professional Help</a></li>
     </ul>
     <div class="user-area">
-      <!-- NEW FEATURE 4: Dark mode toggle -->
       <button id="dark-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">
         <i class="fas fa-moon" id="dark-toggle-icon"></i>
       </button>
@@ -526,36 +551,51 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
   </nav>
   <div class="mobile-nav" id="mobile-nav" role="navigation">
     <a href="#home" onclick="closeMobileNav()">Home</a>
-    <a href="#library" onclick="closeMobileNav()">Phobia Library</a>
-    <a href="#selfhelp" onclick="closeMobileNav()">Fear Ladder</a>
-    <a href="#programs" onclick="closeMobileNav()">Guided Programs</a>
-    <a href="#tools-section" onclick="closeMobileNav()">Self-Help Tools</a>
-    <a href="#videos" onclick="closeMobileNav()">Videos</a>
-    <a href="#professional" onclick="closeMobileNav()">Professional Help</a>
+    <!-- Protected mobile links -->
+    <a href="#library" class="mobile-protected-link" onclick="closeMobileNav()">Phobia Library</a>
+    <a href="#selfhelp" class="mobile-protected-link" onclick="closeMobileNav()">Fear Ladder</a>
+    <a href="#programs" class="mobile-protected-link" onclick="closeMobileNav()">Guided Programs</a>
+    <a href="#tools-section" class="mobile-protected-link" onclick="closeMobileNav()">Self-Help Tools</a>
+    <a href="#videos" class="mobile-protected-link" onclick="closeMobileNav()">Videos</a>
+    <a href="#professional" class="mobile-protected-link" onclick="closeMobileNav()">Professional Help</a>
   </div>
 </header>
 
 <!-- =================== HERO =================== -->
-<!-- CHANGE 1: Removed "Explore Phobias" button; added sub-heading, trust line, simplified stats -->
 <section id="home">
   <div class="container">
     <div class="hero-content">
       <span class="tag fade-in"><i class="fas fa-leaf"></i> CBT-Based Self-Help</span>
       <h1 class="fade-in-2">Face your fears, <em>one small step</em> at a time.</h1>
       <p class="fade-in-3">FearFade helps you understand your phobias and gradually overcome them using evidence-based Cognitive Behavioural Therapy techniques — compassionate guidance at your own pace.</p>
-      <!-- NEW: Sub-heading below paragraph -->
       <div class="hero-subline fade-in-3">
-        <span>⚡</span> No VR. No equipment. Just you and science-backed tools.
+        <span>⚡</span> VR Videos. No equipment. Just you and science-backed tools.
       </div>
       <div class="hero-actions fade-in-3">
-        <!-- Kept only the "Get Started" button -->
-        <a href="#library" class="btn btn-primary"><i class="fas fa-arrow-right"></i> Get Started</a>
+        <!--
+          For LOGGED-IN users  → scrolls to #library
+          For LOGGED-OUT users → opens sign-in modal
+          Handled by heroGetStarted() in JS
+        -->
+        <button class="btn btn-primary" onclick="heroGetStarted()">
+          <i class="fas fa-arrow-right"></i> Get Started
+        </button>
       </div>
-      <!-- NEW: Trust line below button -->
       <div class="hero-trust fade-in-3">
         <i class="fas fa-lock"></i> Your progress is stored locally or in your private cloud account
       </div>
-      <!-- Simplified to two stats -->
+
+      <!-- Sign-in prompt banner — only visible when NOT authenticated (controlled by CSS) -->
+      <div class="signin-prompt-banner">
+        <i class="fas fa-lock"></i>
+        <p>
+          <strong>Create a free account</strong> to unlock the Phobia Library, Fear Ladder, Guided Programs, VR Videos, and all Self-Help Tools.
+        </p>
+        <button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">
+          <i class="fas fa-user-plus"></i> Sign Up Free
+        </button>
+      </div>
+
       <div class="hero-stats">
         <div class="hero-stat"><strong>8+</strong><span>Phobias supported</span></div>
         <div class="hero-stat"><strong>100%</strong><span>Free Always</span></div>
@@ -564,8 +604,8 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
   </div>
 </section>
 
-<!-- =================== PHOBIA LIBRARY =================== -->
-<section id="library" class="section section-alt">
+<!-- =================== PHOBIA LIBRARY (PROTECTED) =================== -->
+<section id="library" class="section section-alt protected-section">
   <div class="container">
     <div class="section-header">
       <span class="tag"><i class="fas fa-book"></i> Phobia Library</span>
@@ -576,8 +616,8 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
   </div>
 </section>
 
-<!-- =================== FEAR LADDER =================== -->
-<section id="selfhelp" class="section">
+<!-- =================== FEAR LADDER (PROTECTED) =================== -->
+<section id="selfhelp" class="section protected-section">
   <div class="container">
     <div class="section-header">
       <span class="tag"><i class="fas fa-stairs"></i> Fear Ladder</span>
@@ -634,9 +674,8 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
       </div>
 
       <div class="ladder-sidebar">
-        <!-- NEW FEATURE 2: Streak counter -->
         <div class="sidebar-card" id="streak-card">
-          <h4><i class="fas fa-fire" style="color:#f59e0b;margin-right:0.4rem;"></i>Streak & Achievements</h4>
+          <h4><i class="fas fa-fire" style="color:#f59e0b;margin-right:0.4rem;"></i>Streak &amp; Achievements</h4>
           <div class="streak-row" id="streak-row">
             <div class="streak-flame">🔥</div>
             <div class="streak-info">
@@ -675,7 +714,6 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
           </ul>
         </div>
 
-        <!-- NEW FEATURE 3: Journal with Export Data button -->
         <div class="sidebar-card">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.85rem;flex-wrap:wrap;gap:0.5rem;">
             <h4 style="margin-bottom:0;"><i class="fas fa-book-open" style="color:var(--sage);margin-right:0.4rem;"></i>Daily Journal</h4>
@@ -683,7 +721,6 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
               <button class="btn btn-secondary btn-sm" onclick="toggleExportMenu()" id="export-btn" title="Export all data">
                 <i class="fas fa-download"></i> Export Data
               </button>
-              <!-- Export dropdown -->
               <div id="export-menu" style="display:none;position:absolute;right:0;top:calc(100% + 0.4rem);z-index:300;">
                 <div class="export-dropdown">
                   <button class="export-option" onclick="exportJSON()"><i class="fas fa-code"></i> Export as JSON</button>
@@ -711,8 +748,8 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
   </div>
 </section>
 
-<!-- =================== GUIDED PROGRAMS =================== -->
-<section id="programs" class="section section-alt">
+<!-- =================== GUIDED PROGRAMS (PROTECTED) =================== -->
+<section id="programs" class="section section-alt protected-section">
   <div class="container">
     <div class="section-header">
       <span class="tag"><i class="fas fa-calendar-check"></i> Guided Programs</span>
@@ -723,9 +760,8 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
   </div>
 </section>
 
-<!-- =================== NEW FEATURE 5: SELF-HELP TOOLS SECTION =================== -->
-<!-- Contains Relaxation tab (existing techniques) + new Breathing Timer tab -->
-<section id="tools-section">
+<!-- =================== SELF-HELP TOOLS (PROTECTED) =================== -->
+<section id="tools-section" class="protected-section">
   <div class="container">
     <div class="section-header">
       <span class="tag"><i class="fas fa-wind"></i> Self-Help Tools</span>
@@ -733,7 +769,6 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
       <p>Dedicated tools to help you regulate your nervous system before, during, or after exposure practice.</p>
     </div>
 
-    <!-- Tab strip -->
     <div class="tools-tab-strip">
       <button class="tools-tab-btn active" id="ttab-relaxation" onclick="switchToolsTab('relaxation')">
         <i class="fas fa-spa"></i> Relaxation
@@ -743,7 +778,6 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
       </button>
     </div>
 
-    <!-- RELAXATION TAB -->
     <div class="tools-panel active" id="tpanel-relaxation">
       <div class="grid-2">
         <div class="relaxation-technique">
@@ -765,10 +799,8 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
       </div>
     </div>
 
-    <!-- NEW FEATURE 5: BREATHING TIMER TAB -->
     <div class="tools-panel" id="tpanel-breathing">
       <div class="breathing-layout">
-        <!-- Circle animation -->
         <div class="breathing-circle-wrap">
           <div class="breathing-circle-outer">
             <svg viewBox="0 0 260 260" width="260" height="260" style="position:absolute;top:0;left:0;">
@@ -792,12 +824,8 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
           </div>
           <p class="text-sm text-muted mt-2" id="breath-session-label" style="text-align:center;">Session: 0 cycles</p>
         </div>
-
-        <!-- Settings panel -->
         <div class="breathing-settings">
           <h4><i class="fas fa-sliders" style="color:var(--sage);margin-right:0.4rem;"></i>Settings</h4>
-
-          <!-- Presets -->
           <p class="text-sm text-muted mb-2" style="font-weight:600;text-transform:uppercase;font-size:0.75rem;letter-spacing:0.06em;">Quick Presets</p>
           <div class="preset-btns">
             <button class="preset-btn active" id="preset-box" onclick="applyPreset('box')">
@@ -810,8 +838,6 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
               ⚖️ 5-5-5 Balanced<br><small style="color:var(--text-muted);">Inhale · Hold · Exhale</small>
             </button>
           </div>
-
-          <!-- Custom sliders -->
           <p class="text-sm text-muted mb-2" style="font-weight:600;text-transform:uppercase;font-size:0.75rem;letter-spacing:0.06em;margin-top:1rem;">Custom Durations</p>
           <div class="phase-slider-group">
             <label>Inhale <span id="sl-inhale-val">4</span>s</label>
@@ -835,20 +861,20 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
   </div>
 </section>
 
-<!-- =================== VIDEOS =================== -->
-<section id="videos" class="section">
+<!-- =================== VIDEOS (PROTECTED) =================== -->
+<section id="videos" class="section protected-section">
   <div class="container">
     <div class="section-header">
       <span class="tag"><i class="fas fa-video"></i> Fear Release Videos</span>
-      <h2>Watch &amp; learn</h2>
-      <p>Curated YouTube videos to help you understand and manage anxiety, phobias, and relaxation techniques.</p>
+      <h2>VR Videos</h2>
+      <p>Curated YouTube VR videos to help you face your fear using VR headset or Cardboard Vr Headset in mobile and manage anxiety, phobias.</p>
     </div>
     <div class="video-grid" id="video-grid"></div>
   </div>
 </section>
 
-<!-- =================== PROFESSIONAL HELP =================== -->
-<section id="professional">
+<!-- =================== PROFESSIONAL HELP (PROTECTED) =================== -->
+<section id="professional" class="protected-section">
   <div class="container">
     <div class="grid-2" style="align-items:start;">
       <div>
@@ -1065,6 +1091,75 @@ footer p{color:rgba(255,255,255,0.35);font-size:0.85rem;}
 
 <script>
 /* =============================================================
+   PROTECTED SECTION IDs — used by auth gate
+============================================================= */
+const PROTECTED_HASHES = new Set(['library','selfhelp','programs','tools-section','videos','professional']);
+
+/* =============================================================
+   AUTH GATE HELPERS
+============================================================= */
+function setAuthState(isLoggedIn) {
+  if (isLoggedIn) {
+    document.body.classList.add('user-authenticated');
+  } else {
+    document.body.classList.remove('user-authenticated');
+  }
+}
+
+/**
+ * Checks if the current hash points to a protected section.
+ * If the user is NOT authenticated and tries to access one, redirect + toast.
+ */
+function enforceHashGate() {
+  const hash = (window.location.hash || '').replace('#', '');
+  if (PROTECTED_HASHES.has(hash) && !document.body.classList.contains('user-authenticated')) {
+    // Redirect to #home without pushing a new entry
+    history.replaceState(null, '', '#home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Small delay so the toast appears after the scroll animation
+    setTimeout(() => showToast('🔒 Please sign in to access this content.'), 300);
+    return true; // was blocked
+  }
+  return false;
+}
+
+/**
+ * "Get Started" hero button:
+ *  – Logged in  → scroll to #library
+ *  – Logged out → open sign-in modal
+ */
+function heroGetStarted() {
+  if (document.body.classList.contains('user-authenticated')) {
+    window.location.hash = '#library';
+    document.getElementById('library').scrollIntoView({ behavior: 'smooth' });
+  } else {
+    openAuthModal('signup');
+  }
+}
+
+/* =============================================================
+   HASH CHANGE INTERCEPTOR
+   Intercept all anchor clicks and hashchange events.
+============================================================= */
+window.addEventListener('hashchange', () => {
+  enforceHashGate();
+});
+
+// Intercept ALL in-page anchor clicks globally so we can block
+// before the browser scrolls.
+document.addEventListener('click', function(e) {
+  const anchor = e.target.closest('a[href^="#"]');
+  if (!anchor) return;
+  const hash = anchor.getAttribute('href').replace('#', '');
+  if (PROTECTED_HASHES.has(hash) && !document.body.classList.contains('user-authenticated')) {
+    e.preventDefault();
+    history.replaceState(null, '', '#home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => showToast('🔒 Please sign in to access this content.'), 300);
+  }
+}, true); // capture phase — runs before the browser follows the href
+
+/* =============================================================
    PHOBIA DATA
 ============================================================= */
 const PHOBIAS = [
@@ -1079,7 +1174,7 @@ const PHOBIAS = [
     audioUrl: 'https://github.com/omthakur7/fearfade/raw/refs/heads/main/audios/Arachnophobia.mp3',
     audioTitle: 'Mindfulness Relaxation Audio',
     mediaSteps: [
-      { desc: 'Read about why spiders are beneficial to the ecosystem', rating: 1, mediaUrl: null, mediaType: null, mediaAlt: 'A delicate spider web with morning dew', mediaUrlFallback: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b2/Hausrobbe.JPG/320px-Hausrobbe.JPG' },
+      { desc: 'Read about why spiders are beneficial to the ecosystem', rating: 1, mediaUrl: null, mediaType: null, mediaAlt: 'A delicate spider web with morning dew' },
       { desc: 'Look at a cartoon drawing of a friendly spider', rating: 2, mediaUrl: 'https://images.unsplash.com/photo-1620059138674-24bdb08ef639?q=80&w=1171&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Simple artistic illustration of a spider' },
       { desc: 'View a still photograph of a small house spider from a distance', rating: 3, mediaUrl: 'https://images.unsplash.com/photo-1536309444594-e65ee01f7512?q=80&w=1170&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Small spider on a wall' },
       { desc: 'Look at a close-up photo of a common garden spider', rating: 5, mediaUrl: 'https://images.unsplash.com/photo-1598356918644-7a5af992f40c?q=80&w=748&auto=format&fit=crop', mediaType: 'image', mediaAlt: 'Garden spider on its web' },
@@ -1256,12 +1351,12 @@ const PROGRAMS = [
 ];
 
 const VIDEOS = [
-  {id:'relax1',title:'Guided Breathing Exercise (4-7-8)',description:'Learn the 4-7-8 breathing technique to calm your nervous system in moments of anxiety.',embed:'https://www.youtube.com/embed/LiUnFJ8P4gM'},
-  {id:'cbt1',title:'What is CBT? A Simple Introduction',description:'Understand the basics of Cognitive Behavioural Therapy and how it helps with phobias.',embed:'https://www.youtube.com/embed/q6aAQgXauQw'},
-  {id:'fear1',title:'Overcoming Fear: Exposure Therapy Explained',description:'A psychologist explains how gradual exposure works and why it is effective.',embed:'https://www.youtube.com/embed/K7hYf0yIK5w'},
-  {id:'panic1',title:'How to Stop a Panic Attack (Grounding)',description:'Immediate grounding techniques to use when you feel panic rising.',embed:'https://www.youtube.com/embed/WGG7MGgptxE'},
-  {id:'mind1',title:'Mindfulness for Anxiety',description:'A short mindfulness practice to reduce anxious thoughts and stay present.',embed:'https://www.youtube.com/embed/GjkwrVi_Lj0'},
-  {id:'fear2',title:'Facing Fear: A Personal Story',description:'A powerful personal account of overcoming a phobia using CBT techniques.',embed:'https://www.youtube.com/embed/K1deLdDENAI'}
+  {id:'relax1',title:'360° FEAR OF HEIGHTS | Are you brave enough? VR',description:'Step into the ultimate vertigo test: a 360° VR experience that plunges you over the edge and dares you not to look down.',embed:'https://www.youtube.com/embed/rNVpFXuAXIA&'},
+  {id:'cbt1',title:'360° VR - Fear of Darkness | Nyctophobia',description:'Step into the suffocating void: a 360° VR descent into pure darkness where every shadow hides a whisper, and your only escape is to face what you cant see.',embed:'https://www.youtube.com/embed/gokaxltNu7Y'},
+  {id:'fear1',title:'360° VR - K9 DOG ATTACK BITE! German Shepherd',description:'Feel the raw fury of a snarling German Shepherd lunging straight at you—360° VR puts you in the bite zone, where instinct screams run, but courage says hold.',embed:'https://www.youtube.com/embed/JxWuWZsSAsI'},
+  {id:'panic1',title:'Speaking in front of a large group of people 360 | Fear of public speaking ',description:'Step into the deafening silence of a thousand staring eyes: a 360° VR experience that traps you at the podium, heart pounding, as every whisper and judgment closes in.',embed:'https://www.youtube.com/embed/2N3B628U_XA'},
+  {id:'mind1',title:'Airplane Take-Off: 360 VIDEO - Reduce Your Fear of Flying ',description:'Strap in and feel the rumble of the engines as the runway blurs beneath you—a 360° video that transforms take-off terror into smooth, soaring confidence.',embed:'https://www.youtube.com/embed/nOh0_Mc9sI0'},
+  {id:'fear2',title:'VR therapy Fear of open spaces',description:'Step beyond the doorway into an endless horizon: a 360° VR therapy session that gently guides you from the safety of walls to the calm of wide-open spaces', embed:'https://www.youtube.com/embed/VauhEKnMp60'}
 ];
 
 /* =============================================================
@@ -1272,7 +1367,7 @@ let journalEntries = JSON.parse(localStorage.getItem('ff_journal') || '[]');
 let sortableInstance = null;
 
 /* =============================================================
-   NEW FEATURE 4: DARK MODE
+   DARK MODE
 ============================================================= */
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark-mode');
@@ -1291,9 +1386,7 @@ function applyStoredTheme() {
 }
 
 /* =============================================================
-   NEW FEATURE 2: STREAK & ACHIEVEMENTS
-   - Tracks consecutive days with any activity
-   - Awards badges based on milestones
+   STREAK & ACHIEVEMENTS
 ============================================================= */
 const BADGE_DEFS = [
   { id: 'beginner',    emoji: '🏅', label: 'Beginner',       condition: (s) => s.totalRungs >= 1 },
@@ -1306,28 +1399,17 @@ const BADGE_DEFS = [
 
 function loadStreakData() {
   return JSON.parse(localStorage.getItem('ff_streak') || JSON.stringify({
-    streak: 0,
-    lastDate: null,
-    earnedBadges: [],
-    totalRungs: 0,
-    journalCount: 0
+    streak: 0, lastDate: null, earnedBadges: [], totalRungs: 0, journalCount: 0
   }));
 }
-
-function saveStreakData(d) {
-  localStorage.setItem('ff_streak', JSON.stringify(d));
-}
+function saveStreakData(d) { localStorage.setItem('ff_streak', JSON.stringify(d)); }
 
 function recordActivity() {
   const d = loadStreakData();
   const today = new Date().toDateString();
-  if (d.lastDate === today) return; // already recorded today
+  if (d.lastDate === today) return;
   const yesterday = new Date(Date.now() - 86400000).toDateString();
-  if (d.lastDate === yesterday) {
-    d.streak += 1;
-  } else if (d.lastDate !== today) {
-    d.streak = 1; // reset streak (missed a day)
-  }
+  d.streak = d.lastDate === yesterday ? d.streak + 1 : 1;
   d.lastDate = today;
   saveStreakData(d);
   checkBadges();
@@ -1335,7 +1417,6 @@ function recordActivity() {
 
 function checkBadges() {
   const d = loadStreakData();
-  // Update counts from current data
   d.totalRungs = ladder.filter(r => r.completed).length;
   d.journalCount = journalEntries.length;
   const newlyEarned = [];
@@ -1353,12 +1434,9 @@ function checkBadges() {
 function renderStreakUI() {
   const d = loadStreakData();
   const countEl = document.getElementById('streak-count');
-  const labelEl = document.getElementById('streak-label');
   const pillsEl = document.getElementById('badge-pills');
   if (!countEl) return;
   countEl.textContent = d.streak;
-  labelEl.textContent = d.streak === 1 ? 'day streak' : 'day streak';
-  // Render all badges (earned ones highlighted)
   pillsEl.innerHTML = BADGE_DEFS.map(b => {
     const isEarned = d.earnedBadges.includes(b.id);
     return `<span class="badge-pill ${isEarned ? 'earned' : ''}" title="${b.label}${isEarned ? ' — Earned!' : ' — Not yet earned'}">${b.emoji} ${b.label}</span>`;
@@ -1366,17 +1444,15 @@ function renderStreakUI() {
 }
 
 /* =============================================================
-   NEW FEATURE 3: EXPORT DATA
+   EXPORT DATA
 ============================================================= */
 function toggleExportMenu() {
   const menu = document.getElementById('export-menu');
   menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-  // Close on outside click
   if (menu.style.display === 'block') {
     setTimeout(() => {
       document.addEventListener('click', function closeMenu(e) {
-        if (!document.getElementById('export-btn').contains(e.target) &&
-            !menu.contains(e.target)) {
+        if (!document.getElementById('export-btn').contains(e.target) && !menu.contains(e.target)) {
           menu.style.display = 'none';
           document.removeEventListener('click', closeMenu);
         }
@@ -1388,17 +1464,8 @@ function toggleExportMenu() {
 function exportJSON() {
   document.getElementById('export-menu').style.display = 'none';
   const prog = {};
-  ['dogs','flying'].forEach(id => {
-    const s = localStorage.getItem('ff_prog_'+id);
-    if (s) prog[id] = JSON.parse(s);
-  });
-  const data = {
-    exportDate: new Date().toISOString(),
-    ladder,
-    journalEntries,
-    programProgress: prog,
-    streak: loadStreakData()
-  };
+  ['dogs','flying'].forEach(id => { const s = localStorage.getItem('ff_prog_'+id); if (s) prog[id] = JSON.parse(s); });
+  const data = { exportDate: new Date().toISOString(), ladder, journalEntries, programProgress: prog, streak: loadStreakData() };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
   downloadBlob(blob, 'fearfade-export.json');
   showToast('📦 JSON export downloaded!');
@@ -1407,13 +1474,9 @@ function exportJSON() {
 function exportCSV() {
   document.getElementById('export-menu').style.display = 'none';
   let csv = 'Type,Description,Rating,Completed,Date\n';
-  ladder.forEach(r => {
-    csv += `Rung,"${r.desc.replace(/"/g,'""')}",${r.rating},${r.completed ? 'Yes' : 'No'},"${r.completedDate || ''}"\n`;
-  });
+  ladder.forEach(r => { csv += `Rung,"${r.desc.replace(/"/g,'""')}",${r.rating},${r.completed ? 'Yes' : 'No'},"${r.completedDate || ''}"\n`; });
   csv += '\nJournal Date,Entry\n';
-  journalEntries.forEach(e => {
-    csv += `"${e.date}","${e.content.replace(/"/g,'""')}"\n`;
-  });
+  journalEntries.forEach(e => { csv += `"${e.date}","${e.content.replace(/"/g,'""')}"\n`; });
   const blob = new Blob([csv], {type: 'text/csv'});
   downloadBlob(blob, 'fearfade-export.csv');
   showToast('📊 CSV export downloaded!');
@@ -1423,89 +1486,59 @@ function exportPDF() {
   document.getElementById('export-menu').style.display = 'none';
   const d = loadStreakData();
   const completedRungs = ladder.filter(r => r.completed);
-  const totalRungs = ladder.length;
   const recentJournal = journalEntries.slice(0, 5);
-
   const content = `
-    <div style="font-family: 'DM Sans', sans-serif; padding: 2rem; max-width: 700px; margin: auto; color: #2c3e35;">
-      <div style="text-align:center; margin-bottom: 2rem; border-bottom: 2px solid #5a8a6a; padding-bottom: 1.5rem;">
-        <h1 style="font-size: 2rem; color: #1e2d24; margin-bottom: 0.25rem;">🌿 FearFade Progress Report</h1>
-        <p style="color: #6b7c74; font-size: 0.9rem;">Generated on ${new Date().toLocaleDateString('en-IN', {weekday:'long', year:'numeric', month:'long', day:'numeric'})}</p>
+    <div style="font-family:'DM Sans',sans-serif;padding:2rem;max-width:700px;margin:auto;color:#2c3e35;">
+      <div style="text-align:center;margin-bottom:2rem;border-bottom:2px solid #5a8a6a;padding-bottom:1.5rem;">
+        <h1 style="font-size:2rem;color:#1e2d24;margin-bottom:0.25rem;">🌿 FearFade Progress Report</h1>
+        <p style="color:#6b7c74;font-size:0.9rem;">Generated on ${new Date().toLocaleDateString('en-IN',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</p>
       </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
-        <div style="text-align:center; background: #e8f2ec; border-radius: 12px; padding: 1rem;">
-          <strong style="font-size: 1.5rem; display: block; color: #3d6b4f;">${d.streak}</strong>
-          <span style="font-size: 0.8rem; color: #6b7c74;">Day Streak 🔥</span>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:2rem;">
+        <div style="text-align:center;background:#e8f2ec;border-radius:12px;padding:1rem;">
+          <strong style="font-size:1.5rem;display:block;color:#3d6b4f;">${d.streak}</strong>
+          <span style="font-size:0.8rem;color:#6b7c74;">Day Streak 🔥</span>
         </div>
-        <div style="text-align:center; background: #edf3f7; border-radius: 12px; padding: 1rem;">
-          <strong style="font-size: 1.5rem; display: block; color: #2f4455;">${completedRungs.length}/${totalRungs}</strong>
-          <span style="font-size: 0.8rem; color: #6b7c74;">Rungs Completed</span>
+        <div style="text-align:center;background:#edf3f7;border-radius:12px;padding:1rem;">
+          <strong style="font-size:1.5rem;display:block;color:#2f4455;">${completedRungs.length}/${ladder.length}</strong>
+          <span style="font-size:0.8rem;color:#6b7c74;">Rungs Completed</span>
         </div>
-        <div style="text-align:center; background: #f5f0e8; border-radius: 12px; padding: 1rem;">
-          <strong style="font-size: 1.5rem; display: block; color: #1e2d24;">${journalEntries.length}</strong>
-          <span style="font-size: 0.8rem; color: #6b7c74;">Journal Entries</span>
+        <div style="text-align:center;background:#f5f0e8;border-radius:12px;padding:1rem;">
+          <strong style="font-size:1.5rem;display:block;color:#1e2d24;">${journalEntries.length}</strong>
+          <span style="font-size:0.8rem;color:#6b7c74;">Journal Entries</span>
         </div>
       </div>
-
-      ${completedRungs.length ? `
-      <h2 style="font-size: 1.2rem; color: #1e2d24; margin-bottom: 1rem; border-bottom: 1px solid #d8e4dc; padding-bottom: 0.5rem;">✅ Completed Rungs</h2>
-      <ul style="list-style: none; padding: 0; margin-bottom: 2rem;">
-        ${completedRungs.map(r => `<li style="padding: 0.5rem 0; border-bottom: 1px solid #f0f0f0; font-size: 0.9rem;">
-          <span style="background: #5a8a6a; color: white; border-radius: 99px; padding: 0.1rem 0.5rem; font-size: 0.75rem; margin-right: 0.5rem;">${r.rating}/10</span>
-          ${escHtml(r.desc)}
-        </li>`).join('')}
-      </ul>` : ''}
-
-      ${d.earnedBadges.length ? `
-      <h2 style="font-size: 1.2rem; color: #1e2d24; margin-bottom: 1rem; border-bottom: 1px solid #d8e4dc; padding-bottom: 0.5rem;">🏆 Earned Badges</h2>
-      <p style="margin-bottom: 2rem;">${d.earnedBadges.map(bid => {
-        const b = BADGE_DEFS.find(x => x.id === bid);
-        return b ? `${b.emoji} ${b.label}` : '';
-      }).filter(Boolean).join('  •  ')}</p>` : ''}
-
-      ${recentJournal.length ? `
-      <h2 style="font-size: 1.2rem; color: #1e2d24; margin-bottom: 1rem; border-bottom: 1px solid #d8e4dc; padding-bottom: 0.5rem;">📔 Recent Journal Entries</h2>
-      ${recentJournal.map(e => `
-        <div style="background: #f5f0e8; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; border-left: 3px solid #5a8a6a;">
-          <p style="font-size: 0.75rem; color: #6b7c74; margin-bottom: 0.3rem;">${e.date}</p>
-          <p style="font-size: 0.9rem;">${escHtml(e.content)}</p>
-        </div>`).join('')}` : ''}
-
-      <p style="margin-top: 2rem; text-align: center; font-size: 0.75rem; color: #6b7c74; border-top: 1px solid #d8e4dc; padding-top: 1rem;">FearFade — CBT-Based Phobia Support. For educational purposes only.</p>
+      ${completedRungs.length ? `<h2 style="font-size:1.2rem;color:#1e2d24;margin-bottom:1rem;border-bottom:1px solid #d8e4dc;padding-bottom:0.5rem;">✅ Completed Rungs</h2>
+      <ul style="list-style:none;padding:0;margin-bottom:2rem;">
+        ${completedRungs.map(r => `<li style="padding:0.5rem 0;border-bottom:1px solid #f0f0f0;font-size:0.9rem;">
+          <span style="background:#5a8a6a;color:white;border-radius:99px;padding:0.1rem 0.5rem;font-size:0.75rem;margin-right:0.5rem;">${r.rating}/10</span>
+          ${escHtml(r.desc)}</li>`).join('')}</ul>` : ''}
+      ${d.earnedBadges.length ? `<h2 style="font-size:1.2rem;color:#1e2d24;margin-bottom:1rem;border-bottom:1px solid #d8e4dc;padding-bottom:0.5rem;">🏆 Earned Badges</h2>
+      <p style="margin-bottom:2rem;">${d.earnedBadges.map(bid => { const b = BADGE_DEFS.find(x => x.id === bid); return b ? `${b.emoji} ${b.label}` : ''; }).filter(Boolean).join('  •  ')}</p>` : ''}
+      ${recentJournal.length ? `<h2 style="font-size:1.2rem;color:#1e2d24;margin-bottom:1rem;border-bottom:1px solid #d8e4dc;padding-bottom:0.5rem;">📔 Recent Journal Entries</h2>
+      ${recentJournal.map(e => `<div style="background:#f5f0e8;border-radius:8px;padding:1rem;margin-bottom:0.75rem;border-left:3px solid #5a8a6a;">
+        <p style="font-size:0.75rem;color:#6b7c74;margin-bottom:0.3rem;">${e.date}</p>
+        <p style="font-size:0.9rem;">${escHtml(e.content)}</p></div>`).join('')}` : ''}
+      <p style="margin-top:2rem;text-align:center;font-size:0.75rem;color:#6b7c74;border-top:1px solid #d8e4dc;padding-top:1rem;">FearFade — CBT-Based Phobia Support. For educational purposes only.</p>
     </div>`;
-
-  const opt = {
-    margin: 0,
-    filename: 'fearfade-report.pdf',
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2 },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-  };
+  const opt = { margin:0, filename:'fearfade-report.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'} };
   const element = document.createElement('div');
   element.innerHTML = content;
   document.body.appendChild(element);
-  html2pdf().set(opt).from(element).save().then(() => {
-    document.body.removeChild(element);
-    showToast('📄 PDF report generated!');
-  });
+  html2pdf().set(opt).from(element).save().then(() => { document.body.removeChild(element); showToast('📄 PDF report generated!'); });
 }
 
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
+  a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
 }
 
 /* =============================================================
-   NEW FEATURE 5: BREATHING TIMER
+   BREATHING TIMER
 ============================================================= */
 let breathingActive = false;
-let breathingTimeout = null;
-let breathingCycles = 0;
+let breathCycles = 0;
 let breathPhases = [
   { name: 'Inhale', key: 'inhale', secs: 4, color: '#5a8a6a', scale: '1.12', desc: 'Breathe in slowly...' },
   { name: 'Hold',   key: 'hold1',  secs: 4, color: '#4a6278', scale: '1.12', desc: 'Hold your breath...' },
@@ -1516,26 +1549,13 @@ let breathPhaseIdx = 0;
 let breathPhaseTime = 0;
 let breathAnimFrame = null;
 let breathLastTick = null;
-
-const CIRCUMFERENCE = 2 * Math.PI * 118; // ~741.42
+const CIRCUMFERENCE = 2 * Math.PI * 118;
 
 function applyPreset(preset) {
-  // Deactivate all preset buttons
-  ['box','478','555'].forEach(p => {
-    const btn = document.getElementById('preset-' + p);
-    if (btn) btn.classList.remove('active');
-  });
+  ['box','478','555'].forEach(p => { const btn = document.getElementById('preset-' + p); if (btn) btn.classList.remove('active'); });
   const btn = document.getElementById('preset-' + preset);
   if (btn) btn.classList.add('active');
-
-  let phases;
-  if (preset === 'box') {
-    phases = [4, 4, 4, 4];
-  } else if (preset === '478') {
-    phases = [4, 7, 8, 0];
-  } else { // 555
-    phases = [5, 5, 5, 0];
-  }
+  const phases = preset === 'box' ? [4,4,4,4] : preset === '478' ? [4,7,8,0] : [5,5,5,0];
   ['inhale','hold1','exhale','hold2'].forEach((key, i) => {
     const slider = document.getElementById('sl-' + key);
     const valEl = document.getElementById('sl-' + key + '-val');
@@ -1547,32 +1567,21 @@ function applyPreset(preset) {
 
 function updateSlider(key, val) {
   document.getElementById('sl-' + key + '-val').textContent = val;
-  const idx = { inhale: 0, hold1: 1, exhale: 2, hold2: 3 }[key];
+  const idx = { inhale:0, hold1:1, exhale:2, hold2:3 }[key];
   if (idx !== undefined) breathPhases[idx].secs = parseInt(val);
-  // Deselect all presets since custom
-  ['box','478','555'].forEach(p => {
-    const btn = document.getElementById('preset-' + p);
-    if (btn) btn.classList.remove('active');
-  });
+  ['box','478','555'].forEach(p => { const btn = document.getElementById('preset-' + p); if (btn) btn.classList.remove('active'); });
   breathingReset();
 }
 
 function breathingStartStop() {
-  if (breathingActive) {
-    breathingStop();
-  } else {
-    breathingStart();
-  }
+  breathingActive ? breathingStop() : breathingStart();
 }
 
 function breathingStart() {
   breathingActive = true;
   const btn = document.getElementById('breath-start-btn');
-  const icon = document.getElementById('breath-start-icon');
   btn.innerHTML = '<i class="fas fa-stop" id="breath-start-icon"></i> Stop';
-  breathPhaseIdx = 0;
-  breathPhaseTime = 0;
-  breathLastTick = performance.now();
+  breathPhaseIdx = 0; breathPhaseTime = 0; breathLastTick = performance.now();
   animateBreath();
 }
 
@@ -1602,8 +1611,6 @@ function animateBreath() {
   const delta = (now - breathLastTick) / 1000;
   breathLastTick = now;
   breathPhaseTime += delta;
-
-  // Skip phases with 0 duration
   let phase = breathPhases[breathPhaseIdx];
   while (phase.secs === 0) {
     breathPhaseIdx = (breathPhaseIdx + 1) % breathPhases.length;
@@ -1611,29 +1618,19 @@ function animateBreath() {
     phase = breathPhases[breathPhaseIdx];
     breathPhaseTime = 0;
   }
-
   const phaseDur = phase.secs;
   const remaining = Math.max(0, phaseDur - breathPhaseTime);
-  const progress = breathPhaseTime / phaseDur; // 0 to 1
-
-  // Update UI
+  const progress = breathPhaseTime / phaseDur;
   document.getElementById('breath-phase').textContent = phase.name;
   document.getElementById('breath-num').textContent = Math.ceil(remaining);
   document.getElementById('breath-desc').textContent = phase.desc;
-
-  // Circle progress
-  const offset = CIRCUMFERENCE - (progress * CIRCUMFERENCE);
   const prog = document.getElementById('breath-progress');
-  prog.style.strokeDashoffset = Math.max(0, offset);
+  prog.style.strokeDashoffset = Math.max(0, CIRCUMFERENCE - (progress * CIRCUMFERENCE));
   prog.style.stroke = phase.color;
-
-  // Inner circle scale animation
   document.getElementById('breath-inner').style.transform = `scale(${
     phase.key === 'inhale' ? (1 + 0.12 * progress) :
     phase.key === 'exhale' ? (1.12 - 0.2 * progress) :
-    parseFloat(phase.scale)
-  })`;
-
+    parseFloat(phase.scale)})`;
   if (breathPhaseTime >= phaseDur) {
     breathPhaseIdx = (breathPhaseIdx + 1) % breathPhases.length;
     if (breathPhaseIdx === 0) {
@@ -1642,13 +1639,9 @@ function animateBreath() {
     }
     breathPhaseTime = 0;
   }
-
   breathAnimFrame = requestAnimationFrame(animateBreath);
 }
 
-let breathCycles = 0;
-
-/* Tools tab switcher */
 function switchToolsTab(tab) {
   ['relaxation','breathing'].forEach(t => {
     document.getElementById('ttab-' + t).classList.toggle('active', t === tab);
@@ -1668,6 +1661,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderPrograms();
   renderVideos();
   renderStreakUI();
+  // Check if page loaded with a protected hash while not logged in.
+  // We run this after a short delay to let Firebase auth state resolve first.
+  setTimeout(enforceHashGate, 800);
 });
 
 /* =============================================================
@@ -1677,14 +1673,20 @@ auth.onAuthStateChanged(async user => {
   const lb = document.getElementById('login-btn');
   const up = document.getElementById('user-profile');
   if (user) {
+    // Grant access
+    setAuthState(true);
     lb.style.display = 'none';
     up.style.display = 'flex';
     document.getElementById('user-name').textContent = user.displayName || user.email.split('@')[0];
     document.getElementById('user-avatar').src = user.photoURL || makeAvatar(user.displayName || user.email);
     await syncAndLoad(user.uid);
   } else {
+    // Revoke access
+    setAuthState(false);
     lb.style.display = 'flex';
     up.style.display = 'none';
+    // If currently on a protected hash, kick to home
+    enforceHashGate();
   }
 });
 
@@ -1704,10 +1706,19 @@ async function doSignIn() {
   clearA('signin');
   if (!email || !pw) { errA('signin','Please fill in both fields.'); return; }
   setBtnLoad('si-btn', true, 'Signing in…');
-  try { await auth.signInWithEmailAndPassword(email, pw); closeModal('auth-modal'); showToast('👋 Welcome back!'); }
+  try {
+    await auth.signInWithEmailAndPassword(email, pw);
+    closeModal('auth-modal');
+    showToast('👋 Welcome back!');
+    // After login, go to library if we were on home
+    if (!window.location.hash || window.location.hash === '#home') {
+      setTimeout(() => { window.location.hash = '#library'; document.getElementById('library').scrollIntoView({behavior:'smooth'}); }, 400);
+    }
+  }
   catch(e) { errA('signin', fe(e.code)); }
   finally { setBtnLoad('si-btn', false); }
 }
+
 async function doSignUp() {
   const name=gv('su-name'),email=gv('su-email'),pw=gv('su-pw'),pw2=gv('su-pw2');
   clearA('signup');
@@ -1716,23 +1727,37 @@ async function doSignUp() {
   if(pw.length<6){errA('signup','Password must be at least 6 characters.');return;}
   if(pw!==pw2){errA('signup','Passwords do not match.');return;}
   setBtnLoad('su-btn',true,'Creating account…');
-  try { const cred=await auth.createUserWithEmailAndPassword(email,pw); await cred.user.updateProfile({displayName:name}); closeModal('auth-modal'); showToast('🎉 Account created! Welcome to FearFade.'); }
+  try {
+    const cred=await auth.createUserWithEmailAndPassword(email,pw);
+    await cred.user.updateProfile({displayName:name});
+    closeModal('auth-modal');
+    showToast('🎉 Account created! Welcome to FearFade.');
+    setTimeout(() => { window.location.hash = '#library'; document.getElementById('library').scrollIntoView({behavior:'smooth'}); }, 400);
+  }
   catch(e){errA('signup',fe(e.code));}
   finally{setBtnLoad('su-btn',false);}
 }
+
 async function doGoogleAuth() {
   clearA('signin');clearA('signup');setGoogleLoading(true);
-  try { const p=new firebase.auth.GoogleAuthProvider(); await auth.signInWithPopup(p); closeModal('auth-modal'); showToast('👋 Signed in with Google!'); }
+  try {
+    const p=new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(p);
+    closeModal('auth-modal');
+    showToast('👋 Signed in with Google!');
+    setTimeout(() => { window.location.hash = '#library'; document.getElementById('library').scrollIntoView({behavior:'smooth'}); }, 400);
+  }
   catch(e) {
     if(e.code==='auth/unauthorized-domain'){const m='⚠️ Google sign-in requires an authorised domain. Use email/password instead.';errA('signin',m);errA('signup',m);}
     else if(e.code!=='auth/popup-closed-by-user'){errA('signin',fe(e.code));}
   }
   finally{setGoogleLoading(false);}
 }
+
 const GOOGLE_SVG=`<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg> Continue with Google`;
 function setGoogleLoading(on){['g-si-btn','g-su-btn'].forEach(id=>{const b=document.getElementById(id);if(!b)return;b.disabled=on;b.innerHTML=on?'<span class="spin" style="border-color:rgba(0,0,0,0.15);border-top-color:#5a8a6a;width:16px;height:16px;"></span> Connecting…':GOOGLE_SVG;});}
 async function doReset(){const email=gv('fp-email');clearA('forgot');if(!email){errA('forgot','Please enter your email address.');return;}setBtnLoad('fp-btn',true,'Sending…');try{await auth.sendPasswordResetEmail(email);okA('forgot','✅ Reset link sent! Check your inbox and spam folder.');document.getElementById('fp-email').value='';}catch(e){errA('forgot',fe(e.code));}finally{setBtnLoad('fp-btn',false);}}
-function logout(){auth.signOut().then(()=>showToast('👋 Signed out.'));}
+function logout(){auth.signOut().then(()=>{ showToast('👋 Signed out.'); window.scrollTo({top:0,behavior:'smooth'}); history.replaceState(null,'','#home'); });}
 function openAuthModal(tab){switchAuthTab(tab||'signin');openModal('auth-modal');}
 function switchAuthTab(tab){['signin','signup','forgot'].forEach(t=>{const p=document.getElementById('apanel-'+t),b=document.getElementById('atab-'+t);if(p)p.classList.toggle('active',t===tab);if(b)b.classList.toggle('active',t===tab);});}
 function gv(id){return(document.getElementById(id)||{}).value?.trim()||'';}
@@ -1745,7 +1770,7 @@ function checkStrength(pw){const box=document.getElementById('pw-strength');if(!
 function fe(code){return({'auth/invalid-email':'That email address is not valid.','auth/user-not-found':'No account found with that email.','auth/wrong-password':'Incorrect password. Please try again.','auth/invalid-credential':'Incorrect email or password.','auth/email-already-in-use':'An account with this email already exists — sign in instead.','auth/weak-password':'Password is too weak (6+ characters required).','auth/too-many-requests':'Too many failed attempts. Please wait a moment.','auth/network-request-failed':'Network error. Check your connection.','auth/popup-blocked':'Pop-up blocked. Please allow pop-ups for this site.','auth/unauthorized-domain':'This domain is not authorised for Google sign-in. Use email/password.'}[code])||'Something went wrong. Please try again.';}
 
 /* =============================================================
-   CLOUD SYNC — now includes streak data
+   CLOUD SYNC
 ============================================================= */
 async function syncAndLoad(uid) {
   try {
@@ -1826,7 +1851,6 @@ function openPhobiaModal(id) {
           ${s.mediaUrl ? `<span class="step-has-media"><i class="fas fa-${s.mediaType==='video'?'play-circle':'image'}"></i></span>` : ''}
         </li>`).join('')}
     </ul>` : '';
-
   document.getElementById('phobia-modal-content').innerHTML = `
     <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;">
       <div style="font-size:2.5rem;">${p.icon}</div>
@@ -1899,7 +1923,7 @@ function closeMediaModal() {
 }
 
 /* =============================================================
-   FEAR LADDER — CORE
+   FEAR LADDER
 ============================================================= */
 function ratingClass(r) { return r <= 3 ? 'rating-easy' : r <= 6 ? 'rating-medium' : 'rating-hard'; }
 function ratingEmoji(r) { return r <= 3 ? '🟢' : r <= 6 ? '🟡' : '🔴'; }
@@ -2018,12 +2042,7 @@ function toggleRung(id) {
   if (rung.completed) rung.completedDate = new Date().toLocaleDateString('en-IN');
   persistLadder();
   autoSync();
-  // NEW: Record activity and check badges on rung completion
-  if (rung.completed) {
-    recordActivity();
-    checkBadges();
-    showToast('🎉 Rung completed! Well done — keep climbing!');
-  }
+  if (rung.completed) { recordActivity(); checkBadges(); showToast('🎉 Rung completed! Well done — keep climbing!'); }
   const el = document.querySelector(`.ladder-rung[data-id="${id}"]`);
   if (!el) { renderLadder(); return; }
   el.classList.toggle('completed', rung.completed);
@@ -2106,7 +2125,7 @@ function clearLadder() {
 function persistLadder() { localStorage.setItem('ff_ladder', JSON.stringify(ladder)); }
 
 /* =============================================================
-   JOURNAL — records activity for streak
+   JOURNAL
 ============================================================= */
 function saveJournalEntry() {
   const text = document.getElementById('journal-input').value.trim();
@@ -2116,7 +2135,6 @@ function saveJournalEntry() {
   document.getElementById('journal-input').value = '';
   renderJournal();
   showToast('📔 Journal entry saved!');
-  // NEW: Record activity for streak, check chronicler badge
   recordActivity();
   checkBadges();
   autoSync();
@@ -2209,7 +2227,14 @@ document.addEventListener('keydown',e=>{
 /* =============================================================
    TOAST & UTILS
 ============================================================= */
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);}
+let _toastTimer = null;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  if (_toastTimer) clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(()=>t.classList.remove('show'),3200);
+}
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 </script>
 </body>
